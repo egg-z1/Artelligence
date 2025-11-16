@@ -14,7 +14,7 @@
 ------
 
 # 구성도
-![image.png](/.attachments/image-2f8abc5b-56c6-4c07-8184-b39536bcd991.png)
+<img width="1610" height="1308" alt="image" src="https://github.com/user-attachments/assets/d67c3585-de1c-42a9-841f-de974fb6b565" />
 ------
 
 # 기획 의도
