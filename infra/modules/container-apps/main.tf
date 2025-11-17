@@ -80,27 +80,27 @@ resource "azurerm_container_app" "backend" {
         value = var.environment == "prod" ? "INFO" : "DEBUG"
       }
 
-      liveness_probe {
-        transport = "HTTP"
-        port      = 8000
-        path      = "/health"
+      # liveness_probe {
+      #   transport = "HTTP"
+      #   port      = 8000
+      #   path      = "/health"
 
-        initial_delay_seconds   = 10
-        period_seconds          = 30
-        timeout_seconds         = 5
-        failure_count_threshold = 3
-      }
+      #   initial_delay_seconds   = 10
+      #   period_seconds          = 30
+      #   timeout_seconds         = 5
+      #   failure_count_threshold = 3
+      # }
 
-      readiness_probe {
-        transport = "HTTP"
-        port      = 8000
-        path      = "/ready"
+      # readiness_probe {
+      #   transport = "HTTP"
+      #   port      = 8000
+      #   path      = "/ready"
 
-        initial_delay_seconds   = 5
-        period_seconds          = 10
-        timeout_seconds         = 3
-        failure_count_threshold = 3
-      }
+      #   initial_delay_seconds   = 5
+      #   period_seconds          = 10
+      #   timeout_seconds         = 3
+      #   failure_count_threshold = 3
+      # }
     }
 
     http_scale_rule {

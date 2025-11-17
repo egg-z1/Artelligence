@@ -13,7 +13,7 @@ common_tags = {
 }
 
 # Container Apps 설정 (비용 최적화)
-backend_container_image = "ghcr.io/egg-z1/artelligence-backend:latest"
+backend_container_image = "ghcr.io/egg-z1/artelligence:latest"
 container_cpu           = 0.25   # 최소 사양
 container_memory        = "0.5Gi"
 min_replicas           = 0       # Scale-to-zero
