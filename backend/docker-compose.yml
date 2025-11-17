@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  # FastAPI 백엔드
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: artelligence-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+      - /app/__pycache__
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - artelligence-network
+
+  # Prometheus (모니터링)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: artelligence-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    restart: unless-stopped
+    networks:
+      - artelligence-network
+
+  # Grafana (시각화)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: artelligence-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - artelligence-network
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  artelligence-network:
+    driver: bridge
