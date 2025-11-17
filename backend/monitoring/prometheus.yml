@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: "artelligence"
+    environment: "production"
+
+# Alertmanager 설정
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# 규칙 파일 로드
+rule_files:
+  # - "alerts.yml"
+
+# 스크랩 설정
+scrape_configs:
+  # Prometheus 자체 모니터링
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # FastAPI 백엔드 모니터링
+  - job_name: "artelligence-backend"
+    scrape_interval: 10s
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["backend:8000"]
+        labels:
+          service: "backend"
+          environment: "production"
+
+  # Azure Container Apps 모니터링 (프로덕션)
+  - job_name: "azure-container-apps"
+    scrape_interval: 30s
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["your-container-app.azurecontainerapps.io"]
+        labels:
+          service: "backend"
+          environment: "azure"
+          region: "koreacentral"
