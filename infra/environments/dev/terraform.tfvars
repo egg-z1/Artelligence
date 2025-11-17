@@ -12,7 +12,7 @@ common_tags = {
 }
 
 # Container Apps 설정
-backend_container_image = "ghcr.io/egg-z1/artelligence-backend:dev"
+backend_container_image = "ghcr.io/egg-z1/Artelligence-backend:dev"
 container_cpu           = 0.25
 container_memory        = "0.5Gi"
 min_replicas            = 0  # Scale-to-zero

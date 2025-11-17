@@ -135,8 +135,6 @@ resource "azurerm_key_vault_access_policy" "container_app" {
   secret_permissions = [
     "Get",
     "List",
-    "Set",
-    "Delete"
   ]
 }
 
