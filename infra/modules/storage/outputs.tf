@@ -18,12 +18,6 @@ output "thumbnails_container_name" {
   value       = azurerm_storage_container.thumbnails.name
 }
 
-output "connection_string_secret_uri" {
-  description = "Storage Connection String Secret URI"
-  value       = azurerm_key_vault_secret.storage_connection_string.id
-  sensitive   = true
-}
-
 output "primary_blob_endpoint" {
   description = "Primary Blob Endpoint"
   value       = azurerm_storage_account.main.primary_blob_endpoint
