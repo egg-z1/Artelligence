@@ -98,8 +98,7 @@ module "container_apps" {
   openai_api_key_secret_uri     = azurerm_key_vault_secret.openai_api_key.id
   storage_connection_string_uri = azurerm_key_vault_secret.storage_connection_string.id
 
-  # container_image      = var.backend_container_image # TODO: 깃허브 컨테이너 이미지로 수정
-  container_image      = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  container_image      = var.backend_container_image
   container_cpu        = var.container_cpu
   container_memory     = var.container_memory
   min_replicas         = var.min_replicas

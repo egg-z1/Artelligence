@@ -38,7 +38,7 @@ variable "common_tags" {
 variable "backend_container_image" {
   description = "백엔드 컨테이너 이미지"
   type        = string
-  default     = "ghcr.io/egg-z1/artelligence-backend:dev"
+  default     = "ghcr.io/egg-z1/artelligence:latest"
 }
 
 variable "container_cpu" {
