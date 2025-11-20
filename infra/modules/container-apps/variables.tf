@@ -117,3 +117,9 @@ variable "container_app_principal_id" {
   type        = string
   default     = null
 }
+
+variable "user_assigned_identity_id" {
+  description = "User Assigned Identity Resource ID (외부에서 생성하여 주입)"
+  type        = string
+  default     = null
+}

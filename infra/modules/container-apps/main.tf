@@ -3,8 +3,8 @@ resource "azurerm_log_analytics_workspace" "main" {
   resource_group_name = var.resource_group_name
   location            = var.location
   sku                 = "PerGB2018"
-  retention_in_days   = 30 # 30일 -> 7일로 축소
-  daily_quota_gb      = 1  # 일일 1GB 제한으로 비용 통제
+  retention_in_days   = 30
+  daily_quota_gb      = 1
 
   tags = var.tags
 }
@@ -14,16 +14,6 @@ resource "azurerm_container_app_environment" "main" {
   resource_group_name        = var.resource_group_name
   location                   = var.location
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
-  # infrastructure_subnet_id 제거 - Consumption Plan 사용 (VNet 통합 비용 절감)
-
-  tags = var.tags
-}
-
-# Managed Identity
-resource "azurerm_user_assigned_identity" "container_app" {
-  name                = "${var.project_name}-${var.environment}-identity"
-  resource_group_name = var.resource_group_name
-  location            = var.location
 
   tags = var.tags
 }
@@ -37,7 +27,7 @@ resource "azurerm_container_app" "backend" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.container_app.id]
+    identity_ids = [var.user_assigned_identity_id]
   }
 
   template {
@@ -47,9 +37,8 @@ resource "azurerm_container_app" "backend" {
     container {
       name   = "artelligence-backend"
       image  = var.container_image
-      cpu    = var.container_cpu    # 0.25 사용 권장
-      memory = var.container_memory # 0.5Gi 사용 권장
-
+      cpu    = var.container_cpu
+      memory = var.container_memory
       env {
         name  = "AZURE_OPENAI_ENDPOINT"
         value = var.openai_endpoint
@@ -112,13 +101,13 @@ resource "azurerm_container_app" "backend" {
   secret {
     name                = "openai-api-key"
     key_vault_secret_id = var.openai_api_key_secret_uri
-    identity            = azurerm_user_assigned_identity.container_app.id
+    identity            = var.user_assigned_identity_id
   }
 
   secret {
     name                = "storage-connection-string"
     key_vault_secret_id = var.storage_connection_string_uri
-    identity            = azurerm_user_assigned_identity.container_app.id
+    identity            = var.user_assigned_identity_id
   }
 
   ingress {

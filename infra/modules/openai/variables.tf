@@ -4,7 +4,7 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-  description = "Azure 리전 (DALL-E 3 지원: swedencentral, eastus)"
+  description = "Azure 리전"
   type        = string
 }
 
@@ -14,7 +14,7 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "환경 (dev, prod)"
+  description = "환경 (dev, staging, prod)"
   type        = string
 }
 
@@ -23,28 +23,16 @@ variable "key_vault_id" {
   type        = string
 }
 
-variable "dalle_version" {
-  description = "DALL-E 모델 버전"
-  type        = string
-  default     = "3.0"
-}
-
-variable "dalle_capacity" {
-  description = "DALL-E 배포 용량 (1K TPM)"
-  type        = number
-  default     = 1
-}
-
-variable "enable_diagnostics" {
-  description = "진단 설정 활성화 여부"
-  type        = bool
-  default     = true
-}
-
 variable "log_analytics_workspace_id" {
   description = "Log Analytics Workspace ID"
   type        = string
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API Key (선택사항, null이면 자동 생성된 키 사용)"
+  type        = string
   default     = null
+  sensitive   = true
 }
 
 variable "tags" {

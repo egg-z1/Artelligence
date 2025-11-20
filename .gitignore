@@ -2,3 +2,9 @@
 *.tfstate
 *.tfstate.backup
 crash.log
+.env
+*.env
+backend/.env
+*/.env
+venv/
+*/venv/

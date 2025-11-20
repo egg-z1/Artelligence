@@ -13,16 +13,6 @@ output "container_app_name" {
   value       = azurerm_container_app.backend.name
 }
 
-output "container_app_principal_id" {
-  description = "Container App Managed Identity Principal ID"
-  value       = azurerm_user_assigned_identity.container_app.principal_id
-}
-
-output "container_app_identity_id" {
-  description = "Container App Managed Identity ID"
-  value       = azurerm_user_assigned_identity.container_app.id
-}
-
 output "latest_revision_name" {
   description = "최신 리비전 이름"
   value       = azurerm_container_app.backend.latest_revision_name
@@ -46,8 +36,4 @@ output "container_app_environment_id" {
 output "url" {
   description = "Container App URL"
   value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}"
-}
-
-output "user_assigned_identity_principal_id" {
-  value = azurerm_user_assigned_identity.container_app.principal_id
 }

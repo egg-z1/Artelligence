@@ -68,7 +68,7 @@ variable "max_replicas" {
 variable "allowed_cors_origins" {
   description = "허용된 CORS 오리진"
   type        = list(string)
-  default     = ["*"] # 개발 환경은 모든 오리진 허용
+  default     = ["*"]
 }
 
 variable "log_retention_days" {
@@ -85,5 +85,11 @@ variable "alert_email" {
 variable "lifecycle_delete_after_days" {
   description = "오래된 Blob 자동 삭제 기간 (일)"
   type        = number
-  default     = 30 # 개발 환경은 더 짧게
+  default     = 30
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API Key (optional, can be null if auto-generated)"
+  type        = string
+  default     = null
 }

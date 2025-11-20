@@ -5,6 +5,7 @@ from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from azure.storage.blob import BlobSasPermissions, generate_blob_sas
+from azure.storage.blob import ContentSettings
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -95,9 +96,10 @@ class StorageService:
                     image_data,
                     overwrite=True,
                     metadata=blob_metadata,
-                    content_settings={
-                        "content_type": "image/png"
-                    }
+                    content_settings=ContentSettings(
+                        content_type="image/png", 
+                        cache_control="no-cache"
+                    )
                 ),
                 timeout=settings.STORAGE_UPLOAD_TIMEOUT
             )
