@@ -5,7 +5,7 @@ resource "azurerm_storage_account" "main" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
   account_kind             = "StorageV2"
-  access_tier              = "Cool" # Hot 대신 Cool 사용으로 저장 비용 절감
+  access_tier              = "Hot"
 
   blob_properties {
     cors_rule {
@@ -22,7 +22,7 @@ resource "azurerm_storage_account" "main" {
   }
 
   network_rules {
-    default_action = "Allow" # Deny 대신 Allow로 변경 (Private Endpoint 비용 절감)
+    default_action = "Allow"
     bypass         = ["AzureServices"]
   }
 
@@ -43,16 +43,8 @@ resource "azurerm_storage_container" "thumbnails" {
   container_access_type = "private"
 }
 
-# Managed Identity for Container Apps
 resource "azurerm_role_assignment" "storage_blob_contributor" {
   scope                = azurerm_storage_account.main.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = var.container_app_principal_id
-}
-
-# Connection string을 Key Vault에 저장
-resource "azurerm_key_vault_secret" "storage_connection_string" {
-  name         = "storage-connection-string"
-  value        = azurerm_storage_account.main.primary_connection_string
-  key_vault_id = var.key_vault_id
 }
