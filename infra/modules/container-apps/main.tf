@@ -18,7 +18,6 @@ resource "azurerm_container_app_environment" "main" {
   tags = var.tags
 }
 
-# Container App
 resource "azurerm_container_app" "backend" {
   name                         = "${var.project_name}-${var.environment}-backend"
   resource_group_name          = var.resource_group_name
@@ -68,28 +67,6 @@ resource "azurerm_container_app" "backend" {
         name  = "LOG_LEVEL"
         value = var.environment == "prod" ? "INFO" : "DEBUG"
       }
-
-      # liveness_probe {
-      #   transport = "HTTP"
-      #   port      = 8000
-      #   path      = "/health"
-
-      #   initial_delay_seconds   = 10
-      #   period_seconds          = 30
-      #   timeout_seconds         = 5
-      #   failure_count_threshold = 3
-      # }
-
-      # readiness_probe {
-      #   transport = "HTTP"
-      #   port      = 8000
-      #   path      = "/ready"
-
-      #   initial_delay_seconds   = 5
-      #   period_seconds          = 10
-      #   timeout_seconds         = 3
-      #   failure_count_threshold = 3
-      # }
     }
 
     http_scale_rule {
@@ -118,13 +95,6 @@ resource "azurerm_container_app" "backend" {
       latest_revision = true
       percentage      = 100
     }
-
-    # cors {
-    #   allowed_origins = var.allowed_cors_origins
-    #   allowed_methods = ["GET", "POST", "OPTIONS"]
-    #   allowed_headers = ["*"]
-    #   max_age         = 3600
-    # }
   }
 
   tags = var.tags

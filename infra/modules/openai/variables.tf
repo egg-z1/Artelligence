@@ -14,7 +14,7 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "환경 (dev, staging, prod)"
+  description = "환경"
   type        = string
 }
 
@@ -39,4 +39,9 @@ variable "tags" {
   description = "리소스 태그"
   type        = map(string)
   default     = {}
+}
+
+variable "public_network_access_enabled" {
+  type    = bool
+  default = true
 }

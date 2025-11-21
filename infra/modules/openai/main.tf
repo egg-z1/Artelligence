@@ -10,7 +10,7 @@ resource "azurerm_cognitive_account" "openai" {
     default_action = "Allow"
   }
 
-  public_network_access_enabled = true
+  public_network_access_enabled = var.public_network_access_enabled
   tags                          = var.tags
 }
 
