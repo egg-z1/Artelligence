@@ -14,7 +14,7 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "환경 (dev, prod)"
+  description = "환경 이름"
   type        = string
 }
 
@@ -25,24 +25,24 @@ variable "subnet_id" {
 }
 
 variable "openai_endpoint" {
-  description = "Azure OpenAI Endpoint"
+  description = "Azure OpenAI 엔드포인트"
   type        = string
 }
 
 variable "openai_api_key_secret_uri" {
-  description = "OpenAI API Key Secret URI"
+  description = "OpenAI API Key가 저장된 Key Vault Secret URI"
   type        = string
   sensitive   = true
 }
 
 variable "storage_connection_string_uri" {
-  description = "Storage Connection String Secret URI"
+  description = "Storage 계정 Connection String이 저장된 Secret URI"
   type        = string
   sensitive   = true
 }
 
 variable "container_image" {
-  description = "컨테이너 이미지"
+  description = "컨테이너 이미지 경로"
   type        = string
 }
 
@@ -53,13 +53,13 @@ variable "container_cpu" {
 }
 
 variable "container_memory" {
-  description = "컨테이너 메모리 (0.5Gi, 1Gi, 1.5Gi, 2Gi, 3Gi, 4Gi)"
+  description = "컨테이너 메모리 크기 (0.5Gi, 1Gi, 1.5Gi, 2Gi, 3Gi, 4Gi)"
   type        = string
   default     = "0.5Gi"
 }
 
 variable "min_replicas" {
-  description = "최소 레플리카 수 (0으로 설정 시 scale-to-zero)"
+  description = "최소 레플리카 수 (0일 경우 scale-to-zero 활성화)"
   type        = number
   default     = 0
 }
@@ -71,25 +71,25 @@ variable "max_replicas" {
 }
 
 variable "target_port" {
-  description = "컨테이너 포트"
+  description = "컨테이너가 리스닝하는 포트 번호"
   type        = number
   default     = 8000
 }
 
 variable "allowed_cors_origins" {
-  description = "허용된 CORS 오리진"
+  description = "허용할 CORS 오리진 목록"
   type        = list(string)
   default     = ["*"]
 }
 
 variable "log_retention_days" {
-  description = "Log Analytics 보관 기간"
+  description = "Log Analytics 로그 보관 기간 (일)"
   type        = number
   default     = 7
 }
 
 variable "log_daily_quota_gb" {
-  description = "Log Analytics 일일 쿼터 (GB)"
+  description = "Log Analytics 일일 사용량 제한 (GB)"
   type        = number
   default     = 1
 }
@@ -101,7 +101,7 @@ variable "dalle_deployment_name" {
 }
 
 variable "images_container_name" {
-  description = "이미지 저장 컨테이너 이름"
+  description = "생성된 이미지를 저장할 Blob 컨테이너 이름"
   type        = string
   default     = "generated-images"
 }
@@ -113,13 +113,13 @@ variable "tags" {
 }
 
 variable "container_app_principal_id" {
-  description = "User Assigned Identity principal ID to be used for role assignments"
+  description = "역할 할당에 사용할 User Assigned Identity의 Principal ID"
   type        = string
   default     = null
 }
 
 variable "user_assigned_identity_id" {
-  description = "User Assigned Identity Resource ID (외부에서 생성하여 주입)"
+  description = "외부에서 생성하여 전달받는 User Assigned Identity Resource ID"
   type        = string
   default     = null
 }

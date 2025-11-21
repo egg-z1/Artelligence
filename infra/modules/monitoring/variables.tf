@@ -19,7 +19,7 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "환경 (dev, prod)"
+  description = "환경"
   type        = string
 }
 
