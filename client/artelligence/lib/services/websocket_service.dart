@@ -82,22 +82,6 @@ class WebSocketService {
     }
   }
 
-  // 이미지 생성 요청 (WebSocket)
-  void requestImageGeneration({
-    required String prompt,
-    String size = '1024x1024',
-    String quality = 'standard',
-    String style = 'vivid',
-  }) {
-    sendMessage({
-      'action': 'generate',
-      'prompt': prompt,
-      'size': size,
-      'quality': quality,
-      'style': style,
-    });
-  }
-
   // 연결 종료
   Future<void> disconnect() async {
     try {

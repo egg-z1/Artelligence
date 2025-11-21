@@ -30,27 +30,32 @@ class ThemeConfig {
     fontSize: 24,
     fontWeight: FontWeight.bold,
     color: textPrimaryColor,
+    fontFamily: 'Pretendard',
   );
 
   static const TextStyle headingSmall = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: textPrimaryColor,
+    fontFamily: 'Pretendard',
   );
 
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
     color: textPrimaryColor,
+    fontFamily: 'Pretendard',
   );
 
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 14,
     color: textSecondaryColor,
+    fontFamily: 'Pretendard',
   );
 
   static const TextStyle caption = TextStyle(
     fontSize: 12,
     color: textSecondaryColor,
+    fontFamily: 'Pretendard',
   );
 
   // 테마 데이터

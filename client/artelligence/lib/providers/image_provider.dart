@@ -102,18 +102,16 @@ class ImageProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // REST API로 이미지 생성
+  // 이미지 생성 요청
   Future<void> generateImage({
     required String prompt,
-    String size = '1024x1024',
-    String quality = 'standard',
-    String style = 'vivid',
+    required String size,
+    required String quality,
+    required String style,
   }) async {
-    if (isGenerating) return;
-
     try {
       _status = GenerationStatus.processing;
-      _statusMessage = '이미지 생성 중... (최대 3분 소요)';
+      _statusMessage = 'AI가 이미지를 그리고 있어요...';
       _currentImage = null;
       notifyListeners();
 
@@ -124,52 +122,18 @@ class ImageProvider extends ChangeNotifier {
         style: style,
       );
 
-      final result = await _apiService.generateImage(request);
+      final generatedImage = await _apiService.generateImage(request);
 
+      _currentImage = generatedImage;
       _status = GenerationStatus.completed;
-      _statusMessage = '✨ 이미지 생성 완료!';
-      _currentImage = result;
+      _statusMessage = '이미지 생성이 완료되었습니다!';
 
-      // 갤러리 새로고침
       await loadGallery();
-
       notifyListeners();
     } catch (e) {
       _status = GenerationStatus.error;
-      _statusMessage = '오류: ${e.toString()}';
-      notifyListeners();
-    }
-  }
-
-  // WebSocket으로 이미지 생성
-  void generateImageWithWebSocket({
-    required String prompt,
-    String size = '1024x1024',
-    String quality = 'standard',
-    String style = 'vivid',
-  }) {
-    if (!_wsService.isConnected) {
-      _status = GenerationStatus.error;
-      _statusMessage = 'WebSocket이 연결되지 않았습니다';
-      notifyListeners();
-      return;
-    }
-
-    try {
-      _status = GenerationStatus.processing;
-      _statusMessage = '이미지 생성 요청 중...';
-      _currentImage = null;
-      notifyListeners();
-
-      _wsService.requestImageGeneration(
-        prompt: prompt,
-        size: size,
-        quality: quality,
-        style: style,
-      );
-    } catch (e) {
-      _status = GenerationStatus.error;
-      _statusMessage = '오류: ${e.toString()}';
+      _statusMessage = '오류가 발생했습니다: ${e.toString()}';
+      print('이미지 생성 에러: $e');
       notifyListeners();
     }
   }
