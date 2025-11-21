@@ -188,3 +188,22 @@ output "developer_info" {
     openai_endpoint  = module.openai.endpoint
   }
 }
+
+resource "azurerm_static_site" "frontend" {
+  name                = "${var.project_name}-${var.environment}-frontend"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = "East Asia"
+  sku_tier            = "Free"
+  sku_size            = "Free"
+
+  tags = var.common_tags
+}
+
+output "static_web_app_api_key" {
+  value     = azurerm_static_site.frontend.api_key
+  sensitive = true
+}
+
+output "frontend_default_hostname" {
+  value = azurerm_static_site.frontend.default_host_name
+}
