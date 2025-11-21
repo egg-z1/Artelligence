@@ -30,7 +30,8 @@ jobs:
         working-directory: client/artelligence
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        # run: flutter build web --release
+        run: flutter build web --release --web-renderer html
         working-directory: client/artelligence
 
       # 3. Azure로 배포
