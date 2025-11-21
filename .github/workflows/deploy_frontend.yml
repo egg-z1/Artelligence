@@ -42,6 +42,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
-          app_location: "client/artelligence"
+          app_location: "client/artelligence/build/web"
           api_location: ""
-          output_location: "build/web"
+          output_location: ""
