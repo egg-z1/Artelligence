@@ -1,0 +1,47 @@
+name: Deploy Frontend to Azure Static Web Apps
+
+on:
+  push:
+    branches: ["main", "feat/**"]
+    paths:
+      - "client/**"
+      - ".github/workflows/deploy_frontend.yml"
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # 1. 플러터 설치
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      # 2. 의존성 설치 및 빌드
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: client/artelligence
+
+      - name: Build Flutter Web
+        run: flutter build web --release
+        working-directory: client/artelligence
+
+      # 3. Azure로 배포
+      - name: Deploy to Azure Static Web Apps
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          skip_app_build: true
+          app_location: "client/artelligence/build/web"
+          api_location: ""
+          output_location: ""
