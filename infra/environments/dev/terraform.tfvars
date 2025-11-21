@@ -19,7 +19,12 @@ min_replicas            = 0  # Scale-to-zero
 max_replicas            = 2
 
 # CORS 설정 (개발 환경)
-allowed_cors_origins = ["*"]
+# allowed_cors_origins = ["*"]
+allowed_cors_origins = [
+  "https://artelligence.shop",
+  "https://www.artelligence.shop",
+  "http://localhost:8080"
+]
 
 # 로그 보관
 log_retention_days = 7
