@@ -1,11 +1,11 @@
 class ApiConfig {
   // 로컬 개발 환경
-  static const String baseUrl = 'http://localhost:8000';
-  static const String wsUrl = 'ws://localhost:8000';
+  // static const String baseUrl = 'http://localhost:8000';
+  // static const String wsUrl = 'ws://localhost:8000';
 
   // 프로덕션 환경 (Azure Container Apps)
-  // static const String baseUrl = 'https://your-app.azurecontainerapps.io';
-  // static const String wsUrl = 'wss://your-app.azurecontainerapps.io';
+  static const String baseUrl = 'https://api.artelligence.shop';
+  static const String wsUrl = 'wss://api.artelligence.shop';
 
   // API 엔드포인트
   static const String healthEndpoint = '/health';
@@ -22,9 +22,9 @@ class ApiConfig {
 
   // 기본 헤더
   static Map<String, String> get headers => {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
 
   // 전체 URL 생성
   static String getFullUrl(String endpoint) => '$baseUrl$endpoint';

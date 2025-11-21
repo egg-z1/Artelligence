@@ -22,6 +22,7 @@ class ApiService {
         throw Exception('Health check failed: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       throw Exception('서버에 연결할 수 없습니다: $e');
     }
   }
@@ -44,6 +45,7 @@ class ApiService {
         throw Exception(error['detail'] ?? '이미지 생성 실패');
       }
     } catch (e) {
+      print(e);
       if (e.toString().contains('TimeoutException')) {
         throw Exception('이미지 생성 시간 초과 (3분 초과)');
       }
@@ -54,13 +56,13 @@ class ApiService {
   // 이미지 목록 조회
   Future<ImageListResponse> getImages({int limit = 12, int offset = 0}) async {
     try {
-      final uri = Uri.parse(ApiConfig.getFullUrl(ApiConfig.imagesEndpoint))
-          .replace(
-            queryParameters: {
-              'limit': limit.toString(),
-              'offset': offset.toString(),
-            },
-          );
+      final uri =
+          Uri.parse(ApiConfig.getFullUrl(ApiConfig.imagesEndpoint)).replace(
+        queryParameters: {
+          'limit': limit.toString(),
+          'offset': offset.toString(),
+        },
+      );
 
       final response = await _client
           .get(uri, headers: ApiConfig.headers)
@@ -72,6 +74,7 @@ class ApiService {
         throw Exception('이미지 목록 조회 실패: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       throw Exception('이미지 목록을 불러올 수 없습니다: $e');
     }
   }
@@ -96,6 +99,7 @@ class ApiService {
         throw Exception('이미지 조회 실패: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       rethrow;
     }
   }
@@ -114,6 +118,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
+      print(e);
       throw Exception('이미지 삭제 실패: $e');
     }
   }
@@ -134,6 +139,7 @@ class ApiService {
         throw Exception('메트릭스 조회 실패: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       throw Exception('메트릭스를 불러올 수 없습니다: $e');
     }
   }
