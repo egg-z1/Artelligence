@@ -68,7 +68,11 @@ variable "max_replicas" {
 variable "allowed_cors_origins" {
   description = "허용된 CORS 오리진"
   type        = list(string)
-  default     = ["*"]
+  default = [
+    "https://artelligence.shop",
+    "https://www.artelligence.shop",
+    "http://localhost:8080",
+  ]
 }
 
 variable "log_retention_days" {
