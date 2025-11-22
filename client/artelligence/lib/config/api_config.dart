@@ -17,7 +17,7 @@ class ApiConfig {
   static String wsEndpoint(String clientId) => '/ws/$clientId';
 
   // 타임아웃 설정
-  static const Duration connectionTimeout = Duration(seconds: 10);
+  static const Duration connectionTimeout = Duration(seconds: 60);
   static const Duration generateTimeout = Duration(minutes: 3);
 
   // 기본 헤더
