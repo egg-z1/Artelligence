@@ -33,6 +33,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8080",
         "https://*.azurecontainerapps.io",
+        "https://www.artelligence.shop",
+        "https://artelligence.shop",
     ]
     
     # 이미지 생성 설정
