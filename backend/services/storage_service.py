@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+import aiohttp
 from datetime import datetime
 from azure.storage.blob.aio import BlobServiceClient
 from azure.storage.blob import ContentSettings
@@ -41,28 +42,24 @@ class StorageService:
 
     async def upload_image(self, image_data: bytes, prompt: str, file_extension: str = "png") -> dict:
         """
-        이미지를 Azure Blob Storage에 업로드합니다.
-        주의: 한글 프롬프트로 인한 400 에러 방지를 위해 metadata에는 prompt를 포함하지 않습니다.
+        이미지 바이트 데이터를 Azure Blob Storage에 업로드
+        (한글 프롬프트 400 에러 방지를 위해 메타데이터 제외)
         """
         try:
-            # 1. 컨테이너 클라이언트 확보
             container_client = await self._ensure_container_exists()
 
-            # 2. 파일 이름 생성 (날짜/UUID 구조)
+            # 파일 이름 생성
             file_name = f"{datetime.now().strftime('%Y%m%d')}/{uuid.uuid4()}.{file_extension}"
             blob_client = container_client.get_blob_client(file_name)
             
-            # 3. 데이터 타입 안전 변환 (bytes 확인)
+            # 데이터 타입 안전 변환
             if not isinstance(image_data, bytes):
-                logger.warning(f"Image data is type {type(image_data)}, converting to bytes.")
                 if isinstance(image_data, str):
                     image_data = image_data.encode('utf-8')
 
             logger.info(f"Uploading blob: {file_name} (Size: {len(image_data)} bytes)")
 
-            # 4. 업로드 실행
-            # 중요: metadata 파라미터를 제거하여 한글 헤더 에러(400) 방지
-            # 중요: ContentSettings 객체 사용
+            # 업로드 실행 (metadata 제거, ContentSettings 적용)
             await blob_client.upload_blob(
                 data=image_data,
                 overwrite=True,
@@ -72,7 +69,6 @@ class StorageService:
                 )
             )
             
-            # 5. 결과 반환
             return {
                 "image_id": file_name,
                 "image_url": blob_client.url
@@ -82,27 +78,72 @@ class StorageService:
             logger.error(f"Failed to upload image: {str(e)}")
             raise Exception(f"이미지 업로드 실패: {str(e)}")
 
-    async def get_image_metadata(self, image_id: str) -> dict:
-        """이미지 메타데이터 조회"""
+    async def upload_image_from_url(self, image_url: str, prompt: str) -> dict:
+        """
+        URL에서 이미지를 다운로드하여 업로드
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(image_url) as response:
+                    if response.status != 200:
+                        raise Exception(f"이미지 다운로드 실패: {response.status}")
+                    image_data = await response.read()
+            
+            # 위에서 만든 upload_image 함수 재사용
+            return await self.upload_image(image_data, prompt)
+            
+        except Exception as e:
+            logger.error(f"Failed to upload image from URL: {str(e)}")
+            raise Exception(f"URL 업로드 실패: {str(e)}")
+
+    async def list_images(self, limit: int = 20, offset: int = 0) -> dict:
+        """
+        이미지 목록 조회 (갤러리용)
+        """
         try:
             container_client = self.blob_service_client.get_container_client(self.container_name)
-            blob_client = container_client.get_blob_client(image_id)
             
-            if not await blob_client.exists():
-                return None
+            # 컨테이너가 없으면 빈 목록 반환
+            if not await container_client.exists():
+                return {"images": [], "total": 0}
 
-            props = await blob_client.get_blob_properties()
+            blobs = []
+            # 모든 블록 리스팅 (include=['metadata']를 제거하여 속도 향상 및 에러 방지)
+            async for blob in container_client.list_blobs():
+                blobs.append(blob)
             
+            # 최신순 정렬 (생성 시간 기준 내림차순)
+            blobs.sort(key=lambda x: x.creation_time, reverse=True)
+            
+            total = len(blobs)
+            
+            # 페이지네이션 적용
+            start = offset
+            end = min(offset + limit, total)
+            paginated_blobs = blobs[start:end]
+            
+            images = []
+            for blob in paginated_blobs:
+                # URL 생성
+                blob_client = container_client.get_blob_client(blob.name)
+                
+                images.append({
+                    "image_id": blob.name,
+                    "url": blob_client.url,
+                    "created_at": blob.creation_time.isoformat() if blob.creation_time else None,
+                    "size": blob.size,
+                    "blob_name": blob.name
+                })
+                
             return {
-                "image_id": image_id,
-                "url": blob_client.url,
-                "size": props.size,
-                "created_at": props.creation_time.isoformat() if props.creation_time else None,
-                "content_type": props.content_settings.content_type
+                "images": images,
+                "total": total
             }
+            
         except Exception as e:
-            logger.error(f"Error getting image metadata: {str(e)}")
-            return None
+            logger.error(f"Error listing images: {str(e)}")
+            # 에러 시 빈 목록 반환 (앱 죽음 방지)
+            return {"images": [], "total": 0}
 
     async def delete_image(self, image_id: str) -> bool:
         """이미지 삭제"""
