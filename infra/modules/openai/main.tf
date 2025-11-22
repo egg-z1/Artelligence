@@ -25,8 +25,8 @@ resource "azurerm_cognitive_deployment" "dalle3" {
     version = "3.0"
   }
 
-  scale {
-    type     = "Standard"
+  sku {
+    name     = "Standard"
     capacity = 1
   }
 }
@@ -45,8 +45,7 @@ resource "azurerm_monitor_diagnostic_setting" "openai" {
     category = "RequestResponse"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
-    enabled  = true
   }
 }

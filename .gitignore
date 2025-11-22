@@ -10,3 +10,4 @@ backend/.env
 */.env
 venv/
 */venv/
+.terraform.lock.hcl

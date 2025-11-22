@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.14.0"
+  required_version = ">= 1.12.2"
 
   required_providers {
     azurerm = {
@@ -39,7 +39,7 @@ resource "azurerm_key_vault" "main" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
-  enable_rbac_authorization  = true
+  rbac_authorization_enabled = true
   soft_delete_retention_days = 7
   purge_protection_enabled   = false
   tags                       = var.common_tags
@@ -189,7 +189,7 @@ output "developer_info" {
   }
 }
 
-resource "azurerm_static_site" "frontend" {
+resource "azurerm_static_web_app" "frontend" {
   name                = "${var.project_name}-${var.environment}-frontend"
   resource_group_name = azurerm_resource_group.main.name
   location            = "East Asia"
@@ -200,10 +200,10 @@ resource "azurerm_static_site" "frontend" {
 }
 
 output "static_web_app_api_key" {
-  value     = azurerm_static_site.frontend.api_key
+  value     = azurerm_static_web_app.frontend.api_key
   sensitive = true
 }
 
 output "frontend_default_hostname" {
-  value = azurerm_static_site.frontend.default_host_name
+  value = azurerm_static_web_app.frontend.default_host_name
 }

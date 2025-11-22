@@ -32,7 +32,11 @@ variable "container_app_principal_id" {
 variable "allowed_cors_origins" {
   description = "허용할 CORS Origin 목록"
   type        = list(string)
-  default     = ["*"]
+  default = [
+    "https://www.artelligence.shop",
+    "https://artelligence.shop",
+    "http://localhost:8080",
+  ]
 }
 
 variable "delete_retention_days" {

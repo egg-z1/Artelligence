@@ -10,7 +10,7 @@ resource "azurerm_storage_account" "main" {
   blob_properties {
     cors_rule {
       allowed_headers    = ["*"]
-      allowed_methods    = ["GET", "HEAD", "POST", "PUT"]
+      allowed_methods    = ["GET", "HEAD", "POST", "PUT", "OPTIONS"]
       allowed_origins    = var.allowed_cors_origins
       exposed_headers    = ["*"]
       max_age_in_seconds = 3600
