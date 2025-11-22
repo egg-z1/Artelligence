@@ -219,16 +219,14 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 @app.get("/api/v1/images", response_model=ImageListResponse)
 async def list_images(limit: int = 20, offset: int = 0):
     """
-    생성된 이미지 목록 조회
-    
-    - **limit**: 조회할 이미지 수 (기본값: 20)
-    - **offset**: 시작 위치 (기본값: 0)
+    저장된 이미지 목록 조회
     """
     try:
-        images = await storage_service.list_images(limit=limit, offset=offset)
+        result = await storage_service.list_images(limit, offset)
+        
         return ImageListResponse(
-            images=images,
-            total=len(images)
+            images=result["images"],
+            total=result["total"]
         )
     except Exception as e:
         logger.error(f"Error listing images: {str(e)}")
