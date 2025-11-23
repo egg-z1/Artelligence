@@ -126,24 +126,17 @@ async def generate_image(request: ImageGenerationRequest):
             raise HTTPException(status_code=500, detail="이미지 생성 실패")
         
         # Azure Blob Storage에 저장
-        blob_url = await storage_service.upload_image_from_url(
+        blob_result = await storage_service.upload_image_from_url(
             image_url=result["url"],
-            image_id=image_id,
-            metadata={
-                "prompt": request.prompt,
-                "size": request.size,
-                "quality": request.quality,
-                "style": request.style,
-                "created_at": datetime.utcnow().isoformat()
-            }
+            prompt=request.prompt
         )
         
         logger.info(f"Image generated successfully: {image_id}")
         
         return ImageGenerationResponse(
-            image_id=image_id,
+            image_id=blob_result["image_id"],
             image_url=result["url"],
-            blob_url=blob_url,
+            blob_url=blob_result["image_url"],
             prompt=request.prompt,
             created_at=datetime.utcnow().isoformat(),
             status="completed"
@@ -172,8 +165,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                         "message": "이미지 생성 중..."
                     })
                     
-                    image_id = str(uuid.uuid4())
-                    
                     # 이미지 생성
                     result = await image_service.generate_image(
                         prompt=data.get("prompt"),
@@ -189,21 +180,17 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                     })
                     
                     # 스토리지에 저장
-                    blob_url = await storage_service.upload_image_from_url(
+                    blob_result = await storage_service.upload_image_from_url(
                         image_url=result["url"],
-                        image_id=image_id,
-                        metadata={
-                            "prompt": data.get("prompt"),
-                            "created_at": datetime.utcnow().isoformat()
-                        }
+                        prompt=data.get("prompt")
                     )
                     
                     # 완료 알림
                     await manager.send_message(client_id, {
                         "status": "completed",
-                        "image_id": image_id,
+                        "image_id": blob_result["image_id"],
                         "image_url": result["url"],
-                        "blob_url": blob_url,
+                        "blob_url": blob_result["image_url"],
                         "message": "이미지 생성 완료!"
                     })
                     
@@ -221,6 +208,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 async def list_images(limit: int = 20, offset: int = 0):
     """
     저장된 이미지 목록 조회
+    
+    - **limit**: 조회할 이미지 수 (기본값: 20)
+    - **offset**: 시작 위치 (기본값: 0)
     """
     try:
         result = await storage_service.list_images(limit, offset)
@@ -233,80 +223,70 @@ async def list_images(limit: int = 20, offset: int = 0):
         logger.error(f"Error listing images: {str(e)}")
         raise HTTPException(status_code=500, detail=f"이미지 목록 조회 중 오류 발생: {str(e)}")
 
-# # 특정 이미지 조회
-# @app.get("/api/v1/images/{image_id:path}")
-# async def get_image(image_id: str):
-#     """
-#     특정 이미지 정보 조회
-#     """
-#     try:
-#         image_data = await storage_service.get_image_metadata(image_id)
-#         if not image_data:
-#             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
-#         return image_data
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         logger.error(f"Error getting image: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"이미지 조회 중 오류 발생: {str(e)}")
-
-# # 이미지 삭제
-# @app.delete("/api/v1/images/{image_id:path}")
-# async def delete_image(image_id: str):
-#     """
-#     이미지 삭제
-#     """
-#     try:
-#         success = await storage_service.delete_image(image_id)
-#         if not success:
-#             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
-#         return {"message": "이미지가 성공적으로 삭제되었습니다", "image_id": image_id}
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         logger.error(f"Error deleting image: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"이미지 삭제 중 오류 발생: {str(e)}")
-
-# 특정 이미지 조회 엔드포인트 수정
-@app.get("/api/v1/images/{image_id:path}")
-async def get_image(image_id: str):
+# 특정 이미지 조회 - 경로 전체를 캡처
+@app.get("/api/v1/images/{image_path:path}")
+async def get_image(image_path: str):
     """
     특정 이미지 정보 조회
+    
+    - **image_path**: 이미지 경로 (예: 2025/11/21/xxx.png)
     """
     try:
-        # [수정됨] URL 인코딩된 ID를 디코딩 (예: 2025%2F11... -> 2025/11...)
-        decoded_image_id = unquote(image_id)
+        logger.info(f"Fetching image metadata for path: {image_path}")
         
-        image_data = await storage_service.get_image_metadata(decoded_image_id)
+        image_data = await storage_service.get_image_metadata(image_path)
+        
         if not image_data:
-            # 디코딩된 ID로도 없으면 404
-            raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
+            logger.warning(f"Image not found: {image_path}")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"이미지를 찾을 수 없습니다: {image_path}"
+            )
+        
         return image_data
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting image: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"이미지 조회 중 오류 발생: {str(e)}")
+        logger.error(f"Error getting image {image_path}: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"이미지 조회 중 오류 발생: {str(e)}"
+        )
 
-# 이미지 삭제 엔드포인트 수정
-@app.delete("/api/v1/images/{image_id:path}")
-async def delete_image(image_id: str):
+# 이미지 삭제 - 경로 전체를 캡처
+@app.delete("/api/v1/images/{image_path:path}")
+async def delete_image(image_path: str):
     """
     이미지 삭제
+    
+    - **image_path**: 이미지 경로 (예: 2025/11/21/xxx.png)
     """
     try:
-        # [수정됨] URL 인코딩된 ID를 디코딩
-        decoded_image_id = unquote(image_id)
+        logger.info(f"Deleting image: {image_path}")
         
-        success = await storage_service.delete_image(decoded_image_id)
+        success = await storage_service.delete_image(image_path)
+        
         if not success:
-            raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
-        return {"message": "이미지가 성공적으로 삭제되었습니다", "image_id": decoded_image_id}
+            logger.warning(f"Image not found for deletion: {image_path}")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"이미지를 찾을 수 없습니다: {image_path}"
+            )
+        
+        return {
+            "message": "이미지가 성공적으로 삭제되었습니다", 
+            "image_id": image_path
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting image: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"이미지 삭제 중 오류 발생: {str(e)}")
+        logger.error(f"Error deleting image {image_path}: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"이미지 삭제 중 오류 발생: {str(e)}"
+        )
 
 # 메트릭스 엔드포인트 (Prometheus)
 @app.get("/metrics")
