@@ -144,12 +144,38 @@ class StorageService:
             logger.error(f"Error listing images: {str(e)}")
             # 에러 시 빈 목록 반환 (앱 죽음 방지)
             return {"images": [], "total": 0}
+    async def get_image_metadata(self, image_id: str) -> dict:
+        """이미지 메타데이터 조회"""
+        try:
+            # 메타데이터 검색 없이, image_id(=파일 경로)로 바로 접근
+            blob_client = self.blob_service_client.get_blob_client(
+                container=self.container_name,
+                blob=image_id
+            )
+            
+            if not await blob_client.exists():
+                return None
 
+            props = await blob_client.get_blob_properties()
+            
+            return {
+                "image_id": image_id,
+                "url": blob_client.url,
+                "size": props.size,
+                "created_at": props.creation_time.isoformat() if props.creation_time else None,
+                "content_type": props.content_settings.content_type
+            }
+        except Exception as e:
+            logger.error(f"Error getting image metadata: {str(e)}")
+            return None
+        
     async def delete_image(self, image_id: str) -> bool:
         """이미지 삭제"""
         try:
-            container_client = self.blob_service_client.get_container_client(self.container_name)
-            blob_client = container_client.get_blob_client(image_id)
+            blob_client = self.blob_service_client.get_blob_client(
+                container=self.container_name,
+                blob=image_id
+            )
             
             if await blob_client.exists():
                 await blob_client.delete_blob()

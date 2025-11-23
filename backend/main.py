@@ -233,7 +233,7 @@ async def list_images(limit: int = 20, offset: int = 0):
         raise HTTPException(status_code=500, detail=f"이미지 목록 조회 중 오류 발생: {str(e)}")
 
 # 특정 이미지 조회
-@app.get("/api/v1/images/{image_id}")
+@app.get("/api/v1/images/{image_id:path}")
 async def get_image(image_id: str):
     """
     특정 이미지 정보 조회
@@ -250,7 +250,7 @@ async def get_image(image_id: str):
         raise HTTPException(status_code=500, detail=f"이미지 조회 중 오류 발생: {str(e)}")
 
 # 이미지 삭제
-@app.delete("/api/v1/images/{image_id}")
+@app.delete("/api/v1/images/{image_id:path}")
 async def delete_image(image_id: str):
     """
     이미지 삭제
