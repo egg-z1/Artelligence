@@ -32,4 +32,3 @@ python-dotenv==1.0.1
 # 유틸리티
 python-dateutil==2.9.0
 pytz==2024.1
-unquote==7.0.1
