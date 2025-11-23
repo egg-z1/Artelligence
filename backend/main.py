@@ -7,6 +7,7 @@ import asyncio
 import uuid
 import logging
 from datetime import datetime
+from urllib.parse import unquote
 
 from services.image_generator import ImageGeneratorService
 from services.storage_service import StorageService
@@ -232,15 +233,53 @@ async def list_images(limit: int = 20, offset: int = 0):
         logger.error(f"Error listing images: {str(e)}")
         raise HTTPException(status_code=500, detail=f"이미지 목록 조회 중 오류 발생: {str(e)}")
 
-# 특정 이미지 조회
+# # 특정 이미지 조회
+# @app.get("/api/v1/images/{image_id:path}")
+# async def get_image(image_id: str):
+#     """
+#     특정 이미지 정보 조회
+#     """
+#     try:
+#         image_data = await storage_service.get_image_metadata(image_id)
+#         if not image_data:
+#             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
+#         return image_data
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Error getting image: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"이미지 조회 중 오류 발생: {str(e)}")
+
+# # 이미지 삭제
+# @app.delete("/api/v1/images/{image_id:path}")
+# async def delete_image(image_id: str):
+#     """
+#     이미지 삭제
+#     """
+#     try:
+#         success = await storage_service.delete_image(image_id)
+#         if not success:
+#             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
+#         return {"message": "이미지가 성공적으로 삭제되었습니다", "image_id": image_id}
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Error deleting image: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"이미지 삭제 중 오류 발생: {str(e)}")
+
+# 특정 이미지 조회 엔드포인트 수정
 @app.get("/api/v1/images/{image_id:path}")
 async def get_image(image_id: str):
     """
     특정 이미지 정보 조회
     """
     try:
-        image_data = await storage_service.get_image_metadata(image_id)
+        # [수정됨] URL 인코딩된 ID를 디코딩 (예: 2025%2F11... -> 2025/11...)
+        decoded_image_id = unquote(image_id)
+        
+        image_data = await storage_service.get_image_metadata(decoded_image_id)
         if not image_data:
+            # 디코딩된 ID로도 없으면 404
             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
         return image_data
     except HTTPException:
@@ -249,17 +288,20 @@ async def get_image(image_id: str):
         logger.error(f"Error getting image: {str(e)}")
         raise HTTPException(status_code=500, detail=f"이미지 조회 중 오류 발생: {str(e)}")
 
-# 이미지 삭제
+# 이미지 삭제 엔드포인트 수정
 @app.delete("/api/v1/images/{image_id:path}")
 async def delete_image(image_id: str):
     """
     이미지 삭제
     """
     try:
-        success = await storage_service.delete_image(image_id)
+        # [수정됨] URL 인코딩된 ID를 디코딩
+        decoded_image_id = unquote(image_id)
+        
+        success = await storage_service.delete_image(decoded_image_id)
         if not success:
             raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
-        return {"message": "이미지가 성공적으로 삭제되었습니다", "image_id": image_id}
+        return {"message": "이미지가 성공적으로 삭제되었습니다", "image_id": decoded_image_id}
     except HTTPException:
         raise
     except Exception as e:
