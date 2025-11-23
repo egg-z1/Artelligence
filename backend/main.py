@@ -228,7 +228,6 @@ async def list_images(limit: int = 20, offset: int = 0):
 async def get_image(image_path: str):
     """
     특정 이미지 정보 조회
-    
     - **image_path**: 이미지 경로 (예: 2025/11/21/xxx.png)
     """
     try:
