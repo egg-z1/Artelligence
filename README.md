@@ -2,7 +2,10 @@
 * **프로젝트명** : Artelligence
 * **기간** : 약 1~2달 (주 2일, 총 8주)
 * **방식** : Azure 기반 인프라 자동화 + OpenAI 이미지 생성 API 활용
-* **주요 기술** 
+* [🔗 client README](https://github.com/egg-z1/Artelligence/tree/main/client/artelligence)
+* [🔗 server README](https://github.com/egg-z1/Artelligence/tree/main/backend)
+* [🔗 infra README](https://github.com/egg-z1/Artelligence/tree/main/infra)
+* **주요 기술**
 
 | 구분 | 기술 스택 |
 | --- | --- |
@@ -34,7 +37,7 @@
 | 기능 | 설명 |
 | --- | --- |
 | 프롬프트 입력 | 사용자가 묘사하고 싶은 장면을 자연어로 입력 |
-| 이미지 생성 | Azure OpenAI의 DALL·E 모델이 해당 문장을 기반으로 이미지 생성 |
+| 이미지 생성 | Azure OpenAI의 DALL·E 3 모델이 해당 문장을 기반으로 이미지 생성 |
 | 이미지 저장 | Azure Blob Storage에 생성된 이미지 저장 |
 | 이미지 보기 | 생성 결과를 웹 페이지에서 시각적으로 확인 |
 | 자동 배포 | GitHub Actions + Terraform으로 인프라 및 코드 자동 배포 |
