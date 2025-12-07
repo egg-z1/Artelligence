@@ -3,6 +3,9 @@
 이 디렉토리는 **Artelligence** 서비스의 클라우드 인프라를 정의하고 관리하는 **Terraform** 코드를 담고 있습니다.
 Azure Cloud 리소스를 코드로 관리(Infrastructure as Code)하여, 개발 환경을 일관성 있게 배포하고 관리합니다.
 
+* [🔗 client README](https://github.com/egg-z1/Artelligence/tree/main/client/artelligence)
+* [🔗 server README](https://github.com/egg-z1/Artelligence/tree/main/backend)
+  
 ## 📂 폴더 구조
 
 ```bash
