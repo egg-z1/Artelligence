@@ -3,6 +3,9 @@
 **Artelligence**의 핵심 로직을 담당하는 백엔드 서버입니다.
 **FastAPI** 프레임워크를 기반으로 구축되었으며, Azure OpenAI(DALL-E 3)를 이용한 이미지 생성과 Azure Blob Storage를 이용한 이미지 저장/관리 기능을 제공합니다.
 
+* [🔗 client README](https://github.com/egg-z1/Artelligence/tree/main/client/artelligence)
+* [🔗 infra README](https://github.com/egg-z1/Artelligence/tree/main/infra)
+
 ## 🛠️ Tech Stack
 
 - **Language:** Python 3.9.6
