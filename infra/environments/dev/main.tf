@@ -94,6 +94,8 @@ module "container_apps" {
   project_name        = var.project_name
   environment         = var.environment
 
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
   openai_endpoint               = module.openai.endpoint
   openai_api_key_secret_uri     = azurerm_key_vault_secret.openai_api_key.id
   storage_connection_string_uri = azurerm_key_vault_secret.storage_connection_string.id
@@ -106,6 +108,8 @@ module "container_apps" {
   allowed_cors_origins = var.allowed_cors_origins
   log_retention_days   = var.log_retention_days
   tags                 = var.common_tags
+
+  dalle_deployment_name = "gpt-image-1"
 
   user_assigned_identity_id = azurerm_user_assigned_identity.backend.id
 

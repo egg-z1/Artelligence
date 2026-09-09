@@ -24,6 +24,11 @@ variable "subnet_id" {
   default     = null
 }
 
+variable "log_analytics_workspace_id" {
+  description = "연결할 Log Analytics Workspace ID"
+  type        = string
+}
+
 variable "openai_endpoint" {
   description = "Azure OpenAI 엔드포인트"
   type        = string
