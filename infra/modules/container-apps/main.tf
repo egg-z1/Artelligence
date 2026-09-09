@@ -44,7 +44,7 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "AZURE_OPENAI_DEPLOYMENT_NAME"
-        value = var.dalle_deployment_name
+        value = var.image_deployment_name
       }
 
       env {

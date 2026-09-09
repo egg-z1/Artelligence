@@ -99,10 +99,10 @@ variable "log_daily_quota_gb" {
   default     = 1
 }
 
-variable "dalle_deployment_name" {
-  description = "DALL-E 배포 이름"
+variable "image_deployment_name" {
+  description = "이미지 생성 모델 배포 이름"
   type        = string
-  default     = "dall-e-3"
+  default     = "gpt-image-1-mini"
 }
 
 variable "images_container_name" {

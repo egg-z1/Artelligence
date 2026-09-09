@@ -109,7 +109,7 @@ module "container_apps" {
   log_retention_days   = var.log_retention_days
   tags                 = var.common_tags
 
-  dalle_deployment_name = "gpt-image-1"
+  image_deployment_name = "gpt-image-1-mini"
 
   user_assigned_identity_id = azurerm_user_assigned_identity.backend.id
 

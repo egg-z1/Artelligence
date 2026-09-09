@@ -14,22 +14,22 @@ resource "azurerm_cognitive_account" "openai" {
   tags                          = var.tags
 }
 
-# gpt-image-1 모델 배포
-# resource "azurerm_cognitive_deployment" "dalle3" {
-#   name                 = "gpt-image-1"
-#   cognitive_account_id = azurerm_cognitive_account.openai.id
-# 
-#   model {
-#     format  = "OpenAI"
-#     name    = "gpt-image-1"
-#     version = "2025-04-15"
-#   }
-# 
-#   sku {
-#     name     = "GlobalStandard"
-#     capacity = 1
-#   }
-# }
+# gpt-image-1-mini 모델 배포
+resource "azurerm_cognitive_deployment" "image" {
+  name                 = "gpt-image-1-mini"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-image-1-mini"
+    version = "2025-10-06"
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = 1
+  }
+}
 
 # Diagnostic Settings
 resource "azurerm_monitor_diagnostic_setting" "openai" {
