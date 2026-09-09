@@ -17,7 +17,7 @@ variable "location" {
 }
 
 variable "openai_location" {
-  description = "Azure OpenAI 리전 (DALL-E 3 지원)"
+  description = "Azure OpenAI 리전"
   type        = string
   default     = "swedencentral"
 }

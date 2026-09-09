@@ -13,7 +13,7 @@ infra/
     ├── container-apps/    # 백엔드 서버 (FastAPI)
     ├── monitoring/        # 모니터링
     ├── networking/        # (추후) vnet 추가 예정
-    ├── openai/            # AI 이미지 생성 (DALL-E 3)
+    ├── openai/            # AI 이미지 생성 (gpt-image-1-mini)
     └── storage/           # 이미지 저장소 (Blob Storage)
 ```
 
@@ -87,7 +87,7 @@ terraform apply
 | :------------------------ | :---------------------------------------------------- | :---------------- |
 | **Azure Container Apps**  | 백엔드 API 서버 (FastAPI) 호스팅, Serverless 컨테이너 | `container_apps`  |
 | **Azure Static Web Apps** | 프론트엔드 (Flutter Web) 호스팅, 글로벌 CDN, 자동 SSL | `frontend` (root) |
-| **Azure OpenAI**          | DALL-E 3 모델을 통한 이미지 생성 API                  | `openai`          |
+| **Azure OpenAI**          | gpt-image-1-mini 모델을 통한 이미지 생성 API                  | `openai`          |
 | **Azure Blob Storage**    | 생성된 이미지 파일 영구 저장                          | `storage`         |
 | **Azure Key Vault**       | API Key, DB 연결 문자열 등 비밀 정보 안전 관리        | root              |
 | **Log Analytics**         | 서버 로그 수집 및 모니터링                            | root              |
