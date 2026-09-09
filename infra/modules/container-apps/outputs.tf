@@ -20,12 +20,12 @@ output "latest_revision_name" {
 
 output "log_analytics_workspace_id" {
   description = "Log Analytics Workspace 리소스 ID"
-  value       = azurerm_log_analytics_workspace.main.id
+  value       = var.log_analytics_workspace_id
 }
 
 output "log_analytics_workspace_name" {
   description = "Log Analytics Workspace 이름"
-  value       = azurerm_log_analytics_workspace.main.name
+  value       = var.log_analytics_workspace_id
 }
 
 output "container_app_environment_id" {

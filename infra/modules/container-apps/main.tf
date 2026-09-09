@@ -1,19 +1,8 @@
-resource "azurerm_log_analytics_workspace" "main" {
-  name                = "${var.project_name}-${var.environment}-logs"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-  daily_quota_gb      = 1
-
-  tags = var.tags
-}
-
 resource "azurerm_container_app_environment" "main" {
   name                       = "${var.project_name}-${var.environment}-env"
   resource_group_name        = var.resource_group_name
   location                   = var.location
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
   tags = var.tags
 }
@@ -54,12 +43,12 @@ resource "azurerm_container_app" "backend" {
       }
 
       env {
-        name  = "DALLE_DEPLOYMENT_NAME"
-        value = "dall-e-3"
+        name  = "AZURE_OPENAI_DEPLOYMENT_NAME"
+        value = var.dalle_deployment_name
       }
 
       env {
-        name  = "CONTAINER_NAME"
+        name  = "AZURE_STORAGE_CONTAINER_NAME"
         value = "generated-images"
       }
 
