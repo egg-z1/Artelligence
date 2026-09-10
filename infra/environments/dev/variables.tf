@@ -63,11 +63,13 @@ variable "max_replicas" {
 }
 
 variable "allowed_cors_origins" {
-  description = "허용된 CORS Origin 목록"
+  description = "허용할 CORS 오리진 목록"
   type        = list(string)
   default = [
-    "https://artelligence.shop",
     "https://www.artelligence.shop",
+    "https://artelligence.shop",
+    "https://blue-coast-0187cab00.7.azurestaticapps.net",
+    "http://localhost:3000",
     "http://localhost:8080",
   ]
 }
