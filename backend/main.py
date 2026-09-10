@@ -114,28 +114,26 @@ async def generate_image(request: ImageGenerationRequest):
         image_id = str(uuid.uuid4())
         logger.info(f"Starting image generation for ID: {image_id}")
         
-        # DALL-E로 이미지 생성
         result = await image_service.generate_image(
             prompt=request.prompt,
             size=request.size,
             quality=request.quality,
-            style=request.style
         )
-        
-        if not result or "url" not in result:
+
+        if not result or "image_bytes" not in result:
             raise HTTPException(status_code=500, detail="이미지 생성 실패")
-        
+
         # Azure Blob Storage에 저장
-        blob_result = await storage_service.upload_image_from_url(
-            image_url=result["url"],
+        blob_result = await storage_service.upload_image(
+            image_data=result["image_bytes"],
             prompt=request.prompt
         )
-        
+
         logger.info(f"Image generated successfully: {image_id}")
-        
+
         return ImageGenerationResponse(
             image_id=blob_result["image_id"],
-            image_url=result["url"],
+            image_url=blob_result["image_url"],
             blob_url=blob_result["image_url"],
             prompt=request.prompt,
             created_at=datetime.utcnow().isoformat(),
@@ -170,26 +168,22 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                         prompt=data.get("prompt"),
                         size=data.get("size", "1024x1024"),
                         quality=data.get("quality", "standard"),
-                        style=data.get("style", "vivid")
                     )
-                    
-                    # 저장 중 알림
+
                     await manager.send_message(client_id, {
                         "status": "saving",
                         "message": "이미지 저장 중..."
                     })
-                    
-                    # 스토리지에 저장
-                    blob_result = await storage_service.upload_image_from_url(
-                        image_url=result["url"],
+
+                    blob_result = await storage_service.upload_image(
+                        image_data=result["image_bytes"],
                         prompt=data.get("prompt")
                     )
-                    
-                    # 완료 알림
+
                     await manager.send_message(client_id, {
                         "status": "completed",
                         "image_id": blob_result["image_id"],
-                        "image_url": result["url"],
+                        "image_url": blob_result["image_url"],
                         "blob_url": blob_result["image_url"],
                         "message": "이미지 생성 완료!"
                     })
