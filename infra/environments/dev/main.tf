@@ -211,3 +211,26 @@ output "static_web_app_api_key" {
 output "frontend_default_hostname" {
   value = azurerm_static_web_app.frontend.default_host_name
 }
+
+resource "azurerm_container_app_custom_domain" "backend" {
+  name             = "api.artelligence.shop"
+  container_app_id = module.container_apps.container_app_id
+
+  lifecycle {
+    ignore_changes = [certificate_binding_type, container_app_environment_certificate_id]
+  }
+}
+
+resource "azurerm_static_web_app_custom_domain" "frontend" {
+  static_web_app_id = azurerm_static_web_app.frontend.id
+  domain_name       = "www.artelligence.shop"
+  validation_type   = "cname-delegation"
+
+  lifecycle {
+    ignore_changes = [validation_type]
+  }
+}
+
+output "container_app_domain_verification_id" {
+  value = module.container_apps.container_app_id != null ? azurerm_container_app_custom_domain.backend.name : null
+}
