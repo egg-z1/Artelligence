@@ -62,4 +62,5 @@ jobs:
             az containerapp update \
               --name artelligence-dev-backend \
               --resource-group artelligence-dev-rg \
-              --image ghcr.io/egg-z1/artelligence:latest
+              --image ghcr.io/egg-z1/artelligence:latest \
+              --revision-suffix run${{ github.run_number }}
