@@ -56,6 +56,11 @@ resource "azurerm_container_app" "backend" {
         name  = "LOG_LEVEL"
         value = var.environment == "prod" ? "INFO" : "DEBUG"
       }
+      
+      env {
+        name  = "ALLOWED_ORIGINS"
+        value = join(",", var.allowed_cors_origins)
+      }
     }
 
     http_scale_rule {
