@@ -5,6 +5,8 @@ import aiohttp
 from datetime import datetime
 from azure.storage.blob.aio import BlobServiceClient
 from azure.storage.blob import ContentSettings
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
+from datetime import datetime, timedelta
 from config import settings
 
 # 로깅 설정
@@ -12,21 +14,32 @@ logger = logging.getLogger(__name__)
 
 class StorageService:
     def __init__(self):
-        # 환경 변수에서 설정 가져오기
         self.connect_str = settings.AZURE_STORAGE_CONNECTION_STRING
         self.container_name = settings.AZURE_STORAGE_CONTAINER_NAME
 
         if not self.connect_str:
-            logger.error("AZURE_STORAGE_CONNECTION_STRING is not set")
             raise ValueError("Azure Storage Connection String이 설정되지 않았습니다.")
 
-        try:
-            # 비동기 클라이언트 초기화
-            self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
-            logger.info("StorageService initialized successfully")
-        except Exception as e:
-            logger.error(f"Storage Service initialization failed: {str(e)}")
-            raise e
+        # 연결 문자열에서 계정명/키 파싱 (SAS 토큰 생성에 필요)
+        parsed = dict(
+            item.split("=", 1) for item in self.connect_str.split(";") if "=" in item
+        )
+        self.account_name = parsed.get("AccountName")
+        self.account_key = parsed.get("AccountKey")
+
+        self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
+
+    def _generate_sas_url(self, blob_name: str, expiry_hours: int = 24) -> str:
+        """블롭에 대해 읽기 전용, 시간 제한이 있는 SAS URL 생성"""
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            container_name=self.container_name,
+            blob_name=blob_name,
+            account_key=self.account_key,
+            permission=BlobSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=expiry_hours),
+        )
+        return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
 
     async def _ensure_container_exists(self):
         """컨테이너가 존재하는지 확인하고 없으면 생성"""
@@ -71,7 +84,7 @@ class StorageService:
             
             return {
                 "image_id": file_name,
-                "image_url": blob_client.url
+                "image_url": self._generate_sas_url(file_name)
             }
             
         except Exception as e:
@@ -129,7 +142,7 @@ class StorageService:
                 
                 images.append({
                     "image_id": blob.name,
-                    "url": blob_client.url,
+                    "url": self._generate_sas_url(blob.name),
                     "created_at": blob.creation_time.isoformat() if blob.creation_time else None,
                     "size": blob.size,
                     "blob_name": blob.name
@@ -160,7 +173,7 @@ class StorageService:
             
             return {
                 "image_id": image_id,
-                "url": blob_client.url,
+                "url": self._generate_sas_url(image_id),
                 "size": props.size,
                 "created_at": props.creation_time.isoformat() if props.creation_time else None,
                 "content_type": props.content_settings.content_type
