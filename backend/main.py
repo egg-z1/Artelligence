@@ -67,18 +67,25 @@ class ImageGenerationRequest(BaseModel):
     size: Optional[str] = Field("1024x1024", description="이미지 크기 (1024x1024, 1792x1024, 1024x1792)")
     quality: Optional[str] = Field("standard", description="이미지 품질 (standard, hd)")
     style: Optional[str] = Field("vivid", description="이미지 스타일 (vivid, natural)")
+    work_title: Optional[str] = Field(None, max_length=200, description="소속 작품 제목 (선택)")
+    excerpt: Optional[str] = Field(None, max_length=2000, description="원문 발췌문 (선택)")
 
 class ImageGenerationResponse(BaseModel):
     image_id: str
     image_url: str
     blob_url: str
     prompt: str
+    work_title: Optional[str] = None
+    excerpt: Optional[str] = None
     created_at: str
     status: str
 
 class ImageListResponse(BaseModel):
     images: List[dict]
     total: int
+
+class WorkListResponse(BaseModel):
+    works: List[dict]
 
 # 헬스체크 엔드포인트
 @app.get("/health")
@@ -126,7 +133,9 @@ async def generate_image(request: ImageGenerationRequest):
         # Azure Blob Storage에 저장
         blob_result = await storage_service.upload_image(
             image_data=result["image_bytes"],
-            prompt=request.prompt
+            prompt=request.prompt,
+            work_title=request.work_title,
+            excerpt=request.excerpt,
         )
 
         logger.info(f"Image generated successfully: {image_id}")
@@ -136,6 +145,8 @@ async def generate_image(request: ImageGenerationRequest):
             image_url=blob_result["image_url"],
             blob_url=blob_result["image_url"],
             prompt=request.prompt,
+            work_title=blob_result.get("work_title"),
+            excerpt=blob_result.get("excerpt"),
             created_at=datetime.utcnow().isoformat(),
             status="completed"
         )
@@ -177,7 +188,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
                     blob_result = await storage_service.upload_image(
                         image_data=result["image_bytes"],
-                        prompt=data.get("prompt")
+                        prompt=data.get("prompt"),
+                        work_title=data.get("work_title"),
+                        excerpt=data.get("excerpt"),
                     )
 
                     await manager.send_message(client_id, {
@@ -185,6 +198,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                         "image_id": blob_result["image_id"],
                         "image_url": blob_result["image_url"],
                         "blob_url": blob_result["image_url"],
+                        "work_title": blob_result.get("work_title"),
+                        "excerpt": blob_result.get("excerpt"),
                         "message": "이미지 생성 완료!"
                     })
                     
@@ -199,15 +214,16 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
 # 이미지 목록 조회
 @app.get("/api/v1/images", response_model=ImageListResponse)
-async def list_images(limit: int = 20, offset: int = 0):
+async def list_images(limit: int = 20, offset: int = 0, work_title: Optional[str] = None):
     """
     저장된 이미지 목록 조회
-    
+
     - **limit**: 조회할 이미지 수 (기본값: 20)
     - **offset**: 시작 위치 (기본값: 0)
+    - **work_title**: 특정 작품의 장면만 조회 (선택)
     """
     try:
-        result = await storage_service.list_images(limit, offset)
+        result = await storage_service.list_images(limit, offset, work_title=work_title)
         
         return ImageListResponse(
             images=result["images"],
@@ -216,6 +232,20 @@ async def list_images(limit: int = 20, offset: int = 0):
     except Exception as e:
         logger.error(f"Error listing images: {str(e)}")
         raise HTTPException(status_code=500, detail=f"이미지 목록 조회 중 오류 발생: {str(e)}")
+
+# 작품 목록 조회 (신규)
+@app.get("/api/v1/works", response_model=WorkListResponse)
+async def list_works():
+    """
+    작품 목록 조회 (서재 화면용)
+    같은 work_title로 묶인 장면들을 작품 단위로 반환
+    """
+    try:
+        result = await storage_service.list_works()
+        return WorkListResponse(works=result["works"])
+    except Exception as e:
+        logger.error(f"Error listing works: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"작품 목록 조회 중 오류 발생: {str(e)}")
 
 # 특정 이미지 조회 - 경로 전체를 캡처
 @app.get("/api/v1/images/{image_path:path}")

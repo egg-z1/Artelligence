@@ -1,16 +1,16 @@
 import os
+import json
 import uuid
 import logging
 import aiohttp
-from datetime import datetime
-from azure.storage.blob.aio import BlobServiceClient
-from azure.storage.blob import ContentSettings
-from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from datetime import datetime, timedelta
+from typing import Optional
+from azure.storage.blob.aio import BlobServiceClient
+from azure.storage.blob import ContentSettings, generate_blob_sas, BlobSasPermissions
 from config import settings
 
-# 로깅 설정
 logger = logging.getLogger(__name__)
+
 
 class StorageService:
     def __init__(self):
@@ -20,7 +20,6 @@ class StorageService:
         if not self.connect_str:
             raise ValueError("Azure Storage Connection String이 설정되지 않았습니다.")
 
-        # 연결 문자열에서 계정명/키 파싱 (SAS 토큰 생성에 필요)
         parsed = dict(
             item.split("=", 1) for item in self.connect_str.split(";") if "=" in item
         )
@@ -30,7 +29,6 @@ class StorageService:
         self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
 
     def _generate_sas_url(self, blob_name: str, expiry_hours: int = 24) -> str:
-        """블롭에 대해 읽기 전용, 시간 제한이 있는 SAS URL 생성"""
         sas_token = generate_blob_sas(
             account_name=self.account_name,
             container_name=self.container_name,
@@ -42,7 +40,6 @@ class StorageService:
         return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
 
     async def _ensure_container_exists(self):
-        """컨테이너가 존재하는지 확인하고 없으면 생성"""
         try:
             container_client = self.blob_service_client.get_container_client(self.container_name)
             if not await container_client.exists():
@@ -53,145 +50,229 @@ class StorageService:
             logger.error(f"Container check/create failed: {str(e)}")
             raise e
 
-    async def upload_image(self, image_data: bytes, prompt: str, file_extension: str = "png") -> dict:
+    def _sidecar_name(self, file_name: str) -> str:
+        """이미지 blob 이름에서 사이드카 JSON 파일 이름 생성"""
+        return f"{file_name}.json"
+
+    async def _save_sidecar(
+        self,
+        container_client,
+        file_name: str,
+        prompt: str,
+        work_title: Optional[str],
+        excerpt: Optional[str],
+    ):
         """
-        이미지 바이트 데이터를 Azure Blob Storage에 업로드
-        (한글 프롬프트 400 에러 방지를 위해 메타데이터 제외)
+        한글 등 non-ASCII 텍스트는 Blob metadata 헤더에 못 넣으므로,
+        같은 이름의 .json 파일을 별도로 저장해 우회한다.
         """
+        sidecar_data = {
+            "prompt": prompt,
+            "work_title": work_title,
+            "excerpt": excerpt,
+        }
+        sidecar_client = container_client.get_blob_client(self._sidecar_name(file_name))
+        await sidecar_client.upload_blob(
+            data=json.dumps(sidecar_data, ensure_ascii=False).encode("utf-8"),
+            overwrite=True,
+            content_settings=ContentSettings(content_type="application/json"),
+        )
+
+    async def _load_sidecar(self, container_client, file_name: str) -> dict:
+        """사이드카 JSON 로드. 없으면 빈 dict 반환 (기존 이미지와의 호환성)"""
+        try:
+            sidecar_client = container_client.get_blob_client(self._sidecar_name(file_name))
+            if not await sidecar_client.exists():
+                return {}
+            data = await sidecar_client.download_blob()
+            content = await data.readall()
+            return json.loads(content)
+        except Exception as e:
+            logger.warning(f"Sidecar load failed for {file_name}: {str(e)}")
+            return {}
+
+    async def upload_image(
+        self,
+        image_data: bytes,
+        prompt: str,
+        work_title: Optional[str] = None,
+        excerpt: Optional[str] = None,
+        file_extension: str = "png",
+    ) -> dict:
+        """이미지 바이트 데이터를 업로드하고, 프롬프트/작품/발췌문을 사이드카 JSON으로 함께 저장"""
         try:
             container_client = await self._ensure_container_exists()
 
-            # 파일 이름 생성
             file_name = f"{datetime.now().strftime('%Y%m%d')}/{uuid.uuid4()}.{file_extension}"
             blob_client = container_client.get_blob_client(file_name)
-            
-            # 데이터 타입 안전 변환
+
             if not isinstance(image_data, bytes):
                 if isinstance(image_data, str):
-                    image_data = image_data.encode('utf-8')
+                    image_data = image_data.encode("utf-8")
 
             logger.info(f"Uploading blob: {file_name} (Size: {len(image_data)} bytes)")
 
-            # 업로드 실행 (metadata 제거, ContentSettings 적용)
             await blob_client.upload_blob(
                 data=image_data,
                 overwrite=True,
                 content_settings=ContentSettings(
                     content_type=f"image/{file_extension}",
-                    cache_control="no-cache"
-                )
+                    cache_control="no-cache",
+                ),
             )
-            
+
+            await self._save_sidecar(container_client, file_name, prompt, work_title, excerpt)
+
             return {
                 "image_id": file_name,
-                "image_url": self._generate_sas_url(file_name)
+                "image_url": self._generate_sas_url(file_name),
+                "work_title": work_title,
+                "excerpt": excerpt,
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to upload image: {str(e)}")
             raise Exception(f"이미지 업로드 실패: {str(e)}")
 
-    async def upload_image_from_url(self, image_url: str, prompt: str) -> dict:
-        """
-        URL에서 이미지를 다운로드하여 업로드
-        """
+    async def upload_image_from_url(
+        self,
+        image_url: str,
+        prompt: str,
+        work_title: Optional[str] = None,
+        excerpt: Optional[str] = None,
+    ) -> dict:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(image_url) as response:
                     if response.status != 200:
                         raise Exception(f"이미지 다운로드 실패: {response.status}")
                     image_data = await response.read()
-            
-            # 위에서 만든 upload_image 함수 재사용
-            return await self.upload_image(image_data, prompt)
-            
+
+            return await self.upload_image(image_data, prompt, work_title, excerpt)
+
         except Exception as e:
             logger.error(f"Failed to upload image from URL: {str(e)}")
             raise Exception(f"URL 업로드 실패: {str(e)}")
 
-    async def list_images(self, limit: int = 20, offset: int = 0) -> dict:
+    async def list_images(self, limit: int = 20, offset: int = 0, work_title: Optional[str] = None) -> dict:
         """
-        이미지 목록 조회 (갤러리용)
+        이미지 목록 조회 (갤러리용).
+        work_title이 주어지면 해당 작품의 장면만 필터링.
         """
         try:
             container_client = self.blob_service_client.get_container_client(self.container_name)
-            
-            # 컨테이너가 없으면 빈 목록 반환
+
             if not await container_client.exists():
                 return {"images": [], "total": 0}
 
             blobs = []
-            # 모든 블록 리스팅 (include=['metadata']를 제거하여 속도 향상 및 에러 방지)
             async for blob in container_client.list_blobs():
-                blobs.append(blob)
-            
-            # 최신순 정렬 (생성 시간 기준 내림차순)
+                # 사이드카 JSON 파일 자체는 이미지 목록에서 제외
+                if not blob.name.endswith(".json"):
+                    blobs.append(blob)
+
             blobs.sort(key=lambda x: x.creation_time, reverse=True)
-            
-            total = len(blobs)
-            
-            # 페이지네이션 적용
-            start = offset
-            end = min(offset + limit, total)
-            paginated_blobs = blobs[start:end]
-            
+
             images = []
-            for blob in paginated_blobs:
-                # URL 생성
-                blob_client = container_client.get_blob_client(blob.name)
-                
+            for blob in blobs:
+                sidecar = await self._load_sidecar(container_client, blob.name)
+                if work_title and sidecar.get("work_title") != work_title:
+                    continue
+
                 images.append({
                     "image_id": blob.name,
                     "url": self._generate_sas_url(blob.name),
                     "created_at": blob.creation_time.isoformat() if blob.creation_time else None,
                     "size": blob.size,
-                    "blob_name": blob.name
+                    "blob_name": blob.name,
+                    "prompt": sidecar.get("prompt"),
+                    "work_title": sidecar.get("work_title"),
+                    "excerpt": sidecar.get("excerpt"),
                 })
-                
-            return {
-                "images": images,
-                "total": total
-            }
-            
+
+            total = len(images)
+            paginated = images[offset:offset + limit]
+
+            return {"images": paginated, "total": total}
+
         except Exception as e:
             logger.error(f"Error listing images: {str(e)}")
-            # 에러 시 빈 목록 반환 (앱 죽음 방지)
             return {"images": [], "total": 0}
-    async def get_image_metadata(self, image_id: str) -> dict:
-        """이미지 메타데이터 조회"""
+
+    async def list_works(self) -> dict:
+        """
+        작품 목록 조회. 같은 work_title을 가진 장면들을 묶어서
+        작품별 장면 수와 대표 썸네일(최신 장면)을 함께 반환.
+        """
         try:
-            # 메타데이터 검색 없이, image_id(=파일 경로)로 바로 접근
-            blob_client = self.blob_service_client.get_blob_client(
-                container=self.container_name,
-                blob=image_id
-            )
-            
+            container_client = self.blob_service_client.get_container_client(self.container_name)
+
+            if not await container_client.exists():
+                return {"works": []}
+
+            blobs = []
+            async for blob in container_client.list_blobs():
+                if not blob.name.endswith(".json"):
+                    blobs.append(blob)
+
+            blobs.sort(key=lambda x: x.creation_time, reverse=True)
+
+            works: dict[str, dict] = {}
+            for blob in blobs:
+                sidecar = await self._load_sidecar(container_client, blob.name)
+                title = sidecar.get("work_title") or "미분류"
+
+                if title not in works:
+                    works[title] = {
+                        "work_title": title,
+                        "scene_count": 0,
+                        "thumbnail_url": self._generate_sas_url(blob.name),
+                        "latest_created_at": blob.creation_time.isoformat() if blob.creation_time else None,
+                    }
+                works[title]["scene_count"] += 1
+
+            return {"works": list(works.values())}
+
+        except Exception as e:
+            logger.error(f"Error listing works: {str(e)}")
+            return {"works": []}
+
+    async def get_image_metadata(self, image_id: str) -> dict:
+        try:
+            container_client = self.blob_service_client.get_container_client(self.container_name)
+            blob_client = container_client.get_blob_client(image_id)
+
             if not await blob_client.exists():
                 return None
 
             props = await blob_client.get_blob_properties()
-            
+            sidecar = await self._load_sidecar(container_client, image_id)
+
             return {
                 "image_id": image_id,
                 "url": self._generate_sas_url(image_id),
                 "size": props.size,
                 "created_at": props.creation_time.isoformat() if props.creation_time else None,
-                "content_type": props.content_settings.content_type
+                "content_type": props.content_settings.content_type,
+                "prompt": sidecar.get("prompt"),
+                "work_title": sidecar.get("work_title"),
+                "excerpt": sidecar.get("excerpt"),
             }
         except Exception as e:
             logger.error(f"Error getting image metadata: {str(e)}")
             return None
-        
+
     async def delete_image(self, image_id: str) -> bool:
-        """이미지 삭제"""
         try:
-            blob_client = self.blob_service_client.get_blob_client(
-                container=self.container_name,
-                blob=image_id
-            )
-            
+            container_client = self.blob_service_client.get_container_client(self.container_name)
+            blob_client = container_client.get_blob_client(image_id)
+
             if await blob_client.exists():
                 await blob_client.delete_blob()
+                # 사이드카도 같이 삭제
+                sidecar_client = container_client.get_blob_client(self._sidecar_name(image_id))
+                if await sidecar_client.exists():
+                    await sidecar_client.delete_blob()
                 return True
             return False
         except Exception as e:
@@ -199,5 +280,4 @@ class StorageService:
             return False
 
     async def close(self):
-        """리소스 정리"""
         await self.blob_service_client.close()
