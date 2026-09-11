@@ -6,6 +6,7 @@ on:
     paths:
       - "client/**"
       - ".github/workflows/deploy_frontend.yml"
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -13,7 +14,7 @@ jobs:
     name: Build and Deploy Job
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
