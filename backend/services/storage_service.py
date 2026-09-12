@@ -157,7 +157,7 @@ class StorageService:
     async def list_images(self, limit: int = 20, offset: int = 0, work_title: Optional[str] = None) -> dict:
         """
         이미지 목록 조회 (갤러리용).
-        work_title이 주어지면 해당 작품의 장면만 필터링.
+        work_title이 주어지면 해당 작품(문자열 그대로, "미분류" 포함)의 장면만 필터링.
         """
         try:
             container_client = self.blob_service_client.get_container_client(self.container_name)
@@ -167,7 +167,6 @@ class StorageService:
 
             blobs = []
             async for blob in container_client.list_blobs():
-                # 사이드카 JSON 파일 자체는 이미지 목록에서 제외
                 if not blob.name.endswith(".json"):
                     blobs.append(blob)
 
@@ -176,7 +175,9 @@ class StorageService:
             images = []
             for blob in blobs:
                 sidecar = await self._load_sidecar(container_client, blob.name)
-                if work_title and sidecar.get("work_title") != work_title:
+                effective_title = sidecar.get("work_title") or "미분류"
+
+                if work_title is not None and effective_title != work_title:
                     continue
 
                 images.append({
