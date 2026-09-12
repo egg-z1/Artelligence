@@ -30,7 +30,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: ThemeConfig.primaryGradient),
+        decoration: const BoxDecoration(color: ThemeConfig.backgroundColor),
         child: SafeArea(
           child: Column(
             children: [
@@ -58,6 +58,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           );
         },
         backgroundColor: ThemeConfig.primaryColor,
+        foregroundColor: ThemeConfig.cardColor,
         icon: const Icon(Icons.add),
         label: const Text('새 장면 만들기'),
       ),
@@ -70,22 +71,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '📚 나의 서재',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                '읽은 소설 속 장면들을 모아두는 곳',
-                style: TextStyle(fontSize: 16, color: Colors.white70),
-              ),
+              Text('나의 서재', style: ThemeConfig.headingLarge),
+              const SizedBox(height: 5),
+              const Text('읽은 소설 속 장면들을 모아두는 곳', style: ThemeConfig.bodyMedium),
             ],
           ),
           _buildConnectionStatus(),
@@ -144,18 +135,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.auto_stories_outlined,
-                  size: 72,
-                  color: Colors.grey,
-                ),
+                Icon(Icons.auto_stories_outlined, size: 72, color: Colors.grey),
                 SizedBox(height: 16),
                 Text('아직 담아둔 장면이 없어요', style: ThemeConfig.bodyLarge),
                 SizedBox(height: 8),
-                Text(
-                  '오른쪽 아래 버튼으로 첫 장면을 만들어보세요',
-                  style: ThemeConfig.bodyMedium,
-                ),
+                Text('오른쪽 아래 버튼으로 첫 장면을 만들어보세요', style: ThemeConfig.bodyMedium),
               ],
             ),
           );
@@ -209,11 +193,8 @@ class _BookTileState extends State<_BookTile> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => WorkDetailScreen(
-                workTitle: widget.work.workTitle == '미분류'
-                    ? null
-                    : widget.work.workTitle,
-              ),
+              builder: (_) =>
+                  WorkDetailScreen(workTitle: widget.work.workTitle),
             ),
           );
         },

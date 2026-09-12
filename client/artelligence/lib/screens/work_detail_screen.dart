@@ -44,9 +44,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           ),
         ],
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(20),
-        child: GalleryGrid(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: const GalleryGrid(),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -59,6 +59,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           );
         },
         backgroundColor: ThemeConfig.primaryColor,
+        foregroundColor: ThemeConfig.cardColor,
         icon: const Icon(Icons.add_photo_alternate_outlined),
         label: const Text('장면 추가'),
       ),
