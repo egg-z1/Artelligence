@@ -226,7 +226,7 @@ class _ImageDetailDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                gradient: ThemeConfig.primaryGradient,
+                color: ThemeConfig.backgroundColor,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
@@ -272,7 +272,7 @@ class _ImageDetailDialog extends StatelessWidget {
                       const SizedBox(height: 20),
 
                       // 프롬프트
-                      const Text('프롬프트', style: ThemeConfig.headingSmall),
+                      Text('프롬프트', style: ThemeConfig.headingSmall),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),

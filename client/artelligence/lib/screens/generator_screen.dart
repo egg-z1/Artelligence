@@ -56,7 +56,7 @@ class GeneratorScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('✨ 장면 만들기', style: ThemeConfig.headingMedium),
+            Text('✨ 장면 만들기', style: ThemeConfig.headingMedium),
             const SizedBox(height: 20),
             ImageGeneratorForm(initialWorkTitle: initialWorkTitle),
             const SizedBox(height: 20),
@@ -73,12 +73,12 @@ class GeneratorScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(30),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('🖼️ 결과', style: ThemeConfig.headingMedium),
-            SizedBox(height: 20),
-            ImagePreview(),
+            const SizedBox(height: 20),
+            const ImagePreview(),
           ],
         ),
       ),

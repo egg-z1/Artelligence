@@ -44,6 +44,9 @@ dependencies:
   # 날짜 포맷팅
   intl: ^0.18.1
 
+  # 폰트
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

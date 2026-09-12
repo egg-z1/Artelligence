@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: ThemeConfig.primaryGradient),
+        decoration: const BoxDecoration(color: ThemeConfig.backgroundColor),
         child: SafeArea(
           child: Column(
             children: [
@@ -159,14 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(30),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('✨ 이미지 생성', style: ThemeConfig.headingMedium),
-            SizedBox(height: 20),
-            ImageGeneratorForm(),
-            SizedBox(height: 20),
-            StatusIndicator(),
+            const SizedBox(height: 20),
+            const ImageGeneratorForm(),
+            const SizedBox(height: 20),
+            const StatusIndicator(),
           ],
         ),
       ),
@@ -179,12 +179,12 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(30),
-        child: const Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('🖼️ 결과', style: ThemeConfig.headingMedium),
-            SizedBox(height: 20),
-            ImagePreview(),
+            const SizedBox(height: 20),
+            const ImagePreview(),
           ],
         ),
       ),
@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('📚 최근 생성된 이미지', style: ThemeConfig.headingMedium),
+                Text('📚 최근 생성된 이미지', style: ThemeConfig.headingMedium),
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: () {
