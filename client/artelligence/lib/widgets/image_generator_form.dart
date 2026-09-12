@@ -4,7 +4,9 @@ import '../config/theme_config.dart';
 import '../providers/image_provider.dart' as app_provider;
 
 class ImageGeneratorForm extends StatefulWidget {
-  const ImageGeneratorForm({super.key});
+  final String? initialWorkTitle;
+
+  const ImageGeneratorForm({super.key, this.initialWorkTitle});
 
   @override
   State<ImageGeneratorForm> createState() => _ImageGeneratorFormState();
@@ -13,14 +15,26 @@ class ImageGeneratorForm extends StatefulWidget {
 class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
   final _formKey = GlobalKey<FormState>();
   final _promptController = TextEditingController();
+  late final TextEditingController _workTitleController;
+  final _excerptController = TextEditingController();
 
   String _selectedSize = '1024x1024';
   String _selectedQuality = 'standard';
   String _selectedStyle = 'vivid';
 
   @override
+  void initState() {
+    super.initState();
+    _workTitleController = TextEditingController(
+      text: widget.initialWorkTitle ?? '',
+    );
+  }
+
+  @override
   void dispose() {
     _promptController.dispose();
+    _workTitleController.dispose();
+    _excerptController.dispose();
     super.dispose();
   }
 
@@ -33,18 +47,48 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
         size: _selectedSize,
         quality: _selectedQuality,
         style: _selectedStyle,
+        workTitle: _workTitleController.text.trim().isEmpty
+            ? null
+            : _workTitleController.text.trim(),
+        excerpt: _excerptController.text.trim().isEmpty
+            ? null
+            : _excerptController.text.trim(),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isWorkTitleLocked = widget.initialWorkTitle != null;
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 프롬프트 입력
+          TextFormField(
+            controller: _workTitleController,
+            enabled: !isWorkTitleLocked,
+            decoration: const InputDecoration(
+              labelText: '작품 제목 (선택)',
+              hintText: '예: 데미안, 나의 라임오렌지나무...',
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: _excerptController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: '원문 발췌 (선택)',
+              hintText: '인상 깊었던 문장을 그대로 붙여넣어보세요',
+              alignLabelWithHint: true,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           TextFormField(
             controller: _promptController,
             maxLines: 5,
@@ -66,7 +110,6 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
 
           const SizedBox(height: 20),
 
-          // 옵션들
           Row(
             children: [
               Expanded(child: _buildSizeDropdown()),
@@ -79,7 +122,6 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
 
           const SizedBox(height: 30),
 
-          // 생성 버튼
           Consumer<app_provider.ImageProvider>(
             builder: (context, provider, child) {
               return ElevatedButton(
@@ -135,9 +177,7 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
         DropdownMenuItem(value: '1024x1792', child: Text('세로형')),
       ],
       onChanged: (value) {
-        if (value != null) {
-          setState(() => _selectedSize = value);
-        }
+        if (value != null) setState(() => _selectedSize = value);
       },
     );
   }
@@ -154,9 +194,7 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
         DropdownMenuItem(value: 'hd', child: Text('HD')),
       ],
       onChanged: (value) {
-        if (value != null) {
-          setState(() => _selectedQuality = value);
-        }
+        if (value != null) setState(() => _selectedQuality = value);
       },
     );
   }
@@ -173,9 +211,7 @@ class _ImageGeneratorFormState extends State<ImageGeneratorForm> {
         DropdownMenuItem(value: 'natural', child: Text('자연스럽게')),
       ],
       onChanged: (value) {
-        if (value != null) {
-          setState(() => _selectedStyle = value);
-        }
+        if (value != null) setState(() => _selectedStyle = value);
       },
     );
   }

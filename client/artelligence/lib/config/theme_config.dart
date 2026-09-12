@@ -121,7 +121,7 @@ class ThemeConfig {
   // 그림자
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           blurRadius: 20,
           offset: const Offset(0, 10),
         ),
@@ -129,7 +129,7 @@ class ThemeConfig {
 
   static List<BoxShadow> get buttonShadow => [
         BoxShadow(
-          color: primaryColor.withOpacity(0.3),
+          color: primaryColor.withValues(alpha: 0.3),
           blurRadius: 20,
           offset: const Offset(0, 10),
         ),

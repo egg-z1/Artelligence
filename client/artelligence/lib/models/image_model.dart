@@ -15,6 +15,11 @@ class GeneratedImage {
 
   final String prompt;
 
+  @JsonKey(name: 'work_title')
+  final String? workTitle;
+
+  final String? excerpt;
+
   @JsonKey(name: 'created_at')
   final String createdAt;
 
@@ -25,6 +30,8 @@ class GeneratedImage {
     required this.imageUrl,
     this.blobUrl,
     required this.prompt,
+    this.workTitle,
+    this.excerpt,
     required this.createdAt,
     required this.status,
   });
@@ -62,7 +69,12 @@ class ImageItem {
   @JsonKey(name: 'created_at')
   final String? createdAt;
 
-  final Map<String, dynamic>? metadata;
+  final String? prompt;
+
+  @JsonKey(name: 'work_title')
+  final String? workTitle;
+
+  final String? excerpt;
 
   ImageItem({
     required this.imageId,
@@ -70,7 +82,9 @@ class ImageItem {
     required this.url,
     required this.size,
     this.createdAt,
-    this.metadata,
+    this.prompt,
+    this.workTitle,
+    this.excerpt,
   });
 
   factory ImageItem.fromJson(Map<String, dynamic> json) =>
@@ -78,27 +92,72 @@ class ImageItem {
 
   Map<String, dynamic> toJson() => _$ImageItemToJson(this);
 
-  String get promptText => metadata?['prompt'] ?? '프롬프트 없음';
+  String get promptText => prompt ?? '프롬프트 없음';
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class GenerationRequest {
   final String prompt;
   final String size;
   final String quality;
   final String style;
 
+  @JsonKey(name: 'work_title')
+  final String? workTitle;
+
+  final String? excerpt;
+
   GenerationRequest({
     required this.prompt,
     this.size = '1024x1024',
     this.quality = 'standard',
     this.style = 'vivid',
+    this.workTitle,
+    this.excerpt,
   });
 
   factory GenerationRequest.fromJson(Map<String, dynamic> json) =>
       _$GenerationRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$GenerationRequestToJson(this);
+}
+
+@JsonSerializable()
+class Work {
+  @JsonKey(name: 'work_title')
+  final String workTitle;
+
+  @JsonKey(name: 'scene_count')
+  final int sceneCount;
+
+  @JsonKey(name: 'thumbnail_url')
+  final String thumbnailUrl;
+
+  @JsonKey(name: 'latest_created_at')
+  final String? latestCreatedAt;
+
+  Work({
+    required this.workTitle,
+    required this.sceneCount,
+    required this.thumbnailUrl,
+    this.latestCreatedAt,
+  });
+
+  factory Work.fromJson(Map<String, dynamic> json) => _$WorkFromJson(json);
+
+  Map<String, dynamic> toJson() => _$WorkToJson(this);
+}
+
+@JsonSerializable()
+class WorkListResponse {
+  final List<Work> works;
+
+  WorkListResponse({required this.works});
+
+  factory WorkListResponse.fromJson(Map<String, dynamic> json) =>
+      _$WorkListResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$WorkListResponseToJson(this);
 }
 
 @JsonSerializable()
@@ -128,6 +187,8 @@ class WebSocketMessage {
   final String? imageId;
   final String? imageUrl;
   final String? blobUrl;
+  final String? workTitle;
+  final String? excerpt;
 
   WebSocketMessage({
     required this.status,
@@ -135,6 +196,8 @@ class WebSocketMessage {
     this.imageId,
     this.imageUrl,
     this.blobUrl,
+    this.workTitle,
+    this.excerpt,
   });
 
   factory WebSocketMessage.fromJson(Map<String, dynamic> json) {
@@ -144,6 +207,8 @@ class WebSocketMessage {
       imageId: json['image_id'] as String?,
       imageUrl: json['image_url'] as String?,
       blobUrl: json['blob_url'] as String?,
+      workTitle: json['work_title'] as String?,
+      excerpt: json['excerpt'] as String?,
     );
   }
 
@@ -153,5 +218,7 @@ class WebSocketMessage {
         if (imageId != null) 'image_id': imageId,
         if (imageUrl != null) 'image_url': imageUrl,
         if (blobUrl != null) 'blob_url': blobUrl,
+        if (workTitle != null) 'work_title': workTitle,
+        if (excerpt != null) 'excerpt': excerpt,
       };
 }

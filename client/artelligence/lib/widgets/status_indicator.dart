@@ -22,7 +22,8 @@ class StatusIndicator extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: _getBackgroundColor(provider.status).withOpacity(0.3),
+                color:
+                    _getBackgroundColor(provider.status).withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),

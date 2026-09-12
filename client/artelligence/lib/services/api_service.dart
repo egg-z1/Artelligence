@@ -53,16 +53,22 @@ class ApiService {
     }
   }
 
-  // 이미지 목록 조회
-  Future<ImageListResponse> getImages({int limit = 12, int offset = 0}) async {
+  // 이미지 목록 조회 (작품 필터 지원)
+  Future<ImageListResponse> getImages({
+    int limit = 12,
+    int offset = 0,
+    String? workTitle,
+  }) async {
     try {
-      final uri =
-          Uri.parse(ApiConfig.getFullUrl(ApiConfig.imagesEndpoint)).replace(
-        queryParameters: {
-          'limit': limit.toString(),
-          'offset': offset.toString(),
-        },
-      );
+      final queryParams = {
+        'limit': limit.toString(),
+        'offset': offset.toString(),
+        if (workTitle != null) 'work_title': workTitle,
+      };
+
+      final uri = Uri.parse(
+        ApiConfig.getFullUrl(ApiConfig.imagesEndpoint),
+      ).replace(queryParameters: queryParams);
 
       final response = await _client
           .get(uri, headers: ApiConfig.headers)
@@ -76,6 +82,27 @@ class ApiService {
     } catch (e) {
       print(e);
       throw Exception('이미지 목록을 불러올 수 없습니다: $e');
+    }
+  }
+
+  // 작품 목록 조회 (서재 화면용)
+  Future<WorkListResponse> getWorks() async {
+    try {
+      final response = await _client
+          .get(
+            Uri.parse(ApiConfig.getFullUrl('/api/v1/works')),
+            headers: ApiConfig.headers,
+          )
+          .timeout(ApiConfig.connectionTimeout);
+
+      if (response.statusCode == 200) {
+        return WorkListResponse.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('작품 목록 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print(e);
+      throw Exception('작품 목록을 불러올 수 없습니다: $e');
     }
   }
 

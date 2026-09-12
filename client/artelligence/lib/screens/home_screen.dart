@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // 주기적으로 서버 상태 확인
     Future.delayed(Duration.zero, () {
+      if (!mounted) return;
       final provider = context.read<app_provider.ImageProvider>();
       provider.checkServerHealth();
     });
@@ -158,14 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(30),
-        child: Column(
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('✨ 이미지 생성', style: ThemeConfig.headingMedium),
-            const SizedBox(height: 20),
-            const ImageGeneratorForm(),
-            const SizedBox(height: 20),
-            const StatusIndicator(),
+            Text('✨ 이미지 생성', style: ThemeConfig.headingMedium),
+            SizedBox(height: 20),
+            ImageGeneratorForm(),
+            SizedBox(height: 20),
+            StatusIndicator(),
           ],
         ),
       ),

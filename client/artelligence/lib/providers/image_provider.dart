@@ -16,6 +16,9 @@ class ImageProvider extends ChangeNotifier {
   String? _statusMessage;
   GeneratedImage? _currentImage;
   List<ImageItem> _galleryImages = [];
+  List<Work> _works = [];
+  bool _isLoadingWorks = false;
+  String? _selectedWorkTitle; // null이면 전체보기(미분류 포함)
   bool _isServerHealthy = false;
   bool _isLoadingGallery = false;
 
@@ -24,6 +27,9 @@ class ImageProvider extends ChangeNotifier {
   String? get statusMessage => _statusMessage;
   GeneratedImage? get currentImage => _currentImage;
   List<ImageItem> get galleryImages => _galleryImages;
+  List<Work> get works => _works;
+  bool get isLoadingWorks => _isLoadingWorks;
+  String? get selectedWorkTitle => _selectedWorkTitle;
   bool get isServerHealthy => _isServerHealthy;
   bool get isLoadingGallery => _isLoadingGallery;
   bool get isGenerating =>
@@ -37,6 +43,7 @@ class ImageProvider extends ChangeNotifier {
   // 초기화
   Future<void> _initialize() async {
     await checkServerHealth();
+    await loadWorks();
     await loadGallery();
     await _setupWebSocket();
   }
@@ -108,6 +115,8 @@ class ImageProvider extends ChangeNotifier {
     required String size,
     required String quality,
     required String style,
+    String? workTitle,
+    String? excerpt,
   }) async {
     try {
       _status = GenerationStatus.processing;
@@ -120,6 +129,8 @@ class ImageProvider extends ChangeNotifier {
         size: size,
         quality: quality,
         style: style,
+        workTitle: workTitle,
+        excerpt: excerpt,
       );
 
       final generatedImage = await _apiService.generateImage(request);
@@ -128,7 +139,8 @@ class ImageProvider extends ChangeNotifier {
       _status = GenerationStatus.completed;
       _statusMessage = '이미지 생성이 완료되었습니다!';
 
-      await loadGallery();
+      await loadGallery(workTitle: _selectedWorkTitle);
+      await loadWorks();
       notifyListeners();
     } catch (e) {
       _status = GenerationStatus.error;
@@ -139,7 +151,11 @@ class ImageProvider extends ChangeNotifier {
   }
 
   // 갤러리 로드
-  Future<void> loadGallery({int limit = 12, int offset = 0}) async {
+  Future<void> loadGallery({
+    int limit = 12,
+    int offset = 0,
+    String? workTitle,
+  }) async {
     try {
       _isLoadingGallery = true;
       notifyListeners();
@@ -147,6 +163,7 @@ class ImageProvider extends ChangeNotifier {
       final response = await _apiService.getImages(
         limit: limit,
         offset: offset,
+        workTitle: workTitle,
       );
       _galleryImages = response.images;
 
@@ -157,6 +174,30 @@ class ImageProvider extends ChangeNotifier {
       _isLoadingGallery = false;
       notifyListeners();
     }
+  }
+
+  // 작품 목록 로드 (서재 화면용)
+  Future<void> loadWorks() async {
+    try {
+      _isLoadingWorks = true;
+      notifyListeners();
+
+      final response = await _apiService.getWorks();
+      _works = response.works;
+
+      _isLoadingWorks = false;
+      notifyListeners();
+    } catch (e) {
+      print('작품 목록 로드 실패: $e');
+      _isLoadingWorks = false;
+      notifyListeners();
+    }
+  }
+
+  // 특정 작품 선택 (작품 상세 화면 진입 시)
+  Future<void> selectWork(String? workTitle) async {
+    _selectedWorkTitle = workTitle;
+    await loadGallery(workTitle: workTitle);
   }
 
   // 이미지 삭제
