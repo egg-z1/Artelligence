@@ -130,6 +130,7 @@ module "storage" {
   lifecycle_delete_after_days = var.lifecycle_delete_after_days
   tags                        = var.common_tags
   container_app_principal_id  = azurerm_user_assigned_identity.backend.principal_id
+  allowed_cors_origins        = var.allowed_cors_origins
 
   depends_on = [azurerm_role_assignment.terraform_keyvault_admin]
 }
@@ -201,6 +202,10 @@ resource "azurerm_static_web_app" "frontend" {
   sku_size            = "Free"
 
   tags = var.common_tags
+
+  lifecycle {
+    ignore_changes = [repository_branch, repository_url]
+  }
 }
 
 output "static_web_app_api_key" {
