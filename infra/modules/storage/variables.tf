@@ -35,6 +35,8 @@ variable "allowed_cors_origins" {
   default = [
     "https://www.artelligence.shop",
     "https://artelligence.shop",
+    "https://www.artelligence.store",
+    "https://artelligence.store",
     "http://localhost:8080",
   ]
 }

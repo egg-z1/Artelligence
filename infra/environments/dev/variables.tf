@@ -68,6 +68,8 @@ variable "allowed_cors_origins" {
   default = [
     "https://www.artelligence.shop",
     "https://artelligence.shop",
+    "https://www.artelligence.store",
+    "https://artelligence.store",
     "https://blue-coast-0187cab00.7.azurestaticapps.net",
     "http://localhost:3000",
     "http://localhost:8080",

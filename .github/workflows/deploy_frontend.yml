@@ -12,6 +12,8 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
+    env:
+      API_HOST: ${{ vars.ARTELLIGENCE_API_HOST || 'api.artelligence.shop' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +33,14 @@ jobs:
         working-directory: client/artelligence
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: |
+          case "$API_HOST" in
+            api.artelligence.shop|api.artelligence.store) ;;
+            *) echo "Unsupported API host: $API_HOST" >&2; exit 1 ;;
+          esac
+          flutter build web --release \
+            --dart-define="API_BASE_URL=https://$API_HOST" \
+            --dart-define="WS_BASE_URL=wss://$API_HOST"
         working-directory: client/artelligence
 
       # 3. Azure로 배포

@@ -4,8 +4,11 @@ class ApiConfig {
   // static const String wsUrl = 'ws://localhost:8000';
 
   // 프로덕션 환경 (Azure Container Apps)
-  static const String baseUrl = 'https://api.artelligence.shop';
-  static const String wsUrl = 'wss://api.artelligence.shop';
+  // 새 API의 HTTPS 확인 후 빌드 시 두 값을 함께 .store로 전환한다.
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL',
+      defaultValue: 'https://api.artelligence.shop');
+  static const String wsUrl = String.fromEnvironment('WS_BASE_URL',
+      defaultValue: 'wss://api.artelligence.shop');
 
   // API 엔드포인트
   static const String healthEndpoint = '/health';

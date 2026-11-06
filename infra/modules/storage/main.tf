@@ -21,11 +21,6 @@ resource "azurerm_storage_account" "main" {
     }
   }
 
-  network_rules {
-    default_action = "Allow"
-    bypass         = ["AzureServices"]
-  }
-
   min_tls_version = "TLS1_2"
 
   tags = var.tags

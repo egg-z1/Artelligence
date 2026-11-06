@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     
     # CORS 설정 (환경변수는 콤마로 구분된 문자열로 받음)
     ALLOWED_ORIGINS_STR: str = Field(
-        default="http://localhost:3000,http://localhost:8080,https://www.artelligence.shop,https://artelligence.shop",
+        default="http://localhost:3000,http://localhost:8080,https://www.artelligence.shop,https://artelligence.shop,https://www.artelligence.store,https://artelligence.store",
         alias="ALLOWED_ORIGINS"
     )
 

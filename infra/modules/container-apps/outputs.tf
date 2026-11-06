@@ -8,6 +8,12 @@ output "container_app_id" {
   value       = azurerm_container_app.backend.id
 }
 
+output "custom_domain_verification_id" {
+  description = "Container App 커스텀 도메인 검증 TXT 값"
+  value       = azurerm_container_app.backend.custom_domain_verification_id
+  sensitive   = true
+}
+
 output "container_app_name" {
   description = "Container App 이름"
   value       = azurerm_container_app.backend.name

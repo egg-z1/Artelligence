@@ -226,6 +226,17 @@ resource "azurerm_container_app_custom_domain" "backend" {
   }
 }
 
+resource "azurerm_container_app_custom_domain" "backend_store" {
+  name             = "api.artelligence.store"
+  container_app_id = module.container_apps.container_app_id
+
+  # 인증서 발급·바인딩은 DNS 검증과 Terraform 적용 후 Azure CLI로 수행한다.
+  # 이 필드는 CLI가 설정한 관리형 인증서 바인딩을 다음 plan에서 되돌리지 않도록 한다.
+  lifecycle {
+    ignore_changes = [certificate_binding_type, container_app_environment_certificate_id]
+  }
+}
+
 resource "azurerm_static_web_app_custom_domain" "frontend" {
   static_web_app_id = azurerm_static_web_app.frontend.id
   domain_name       = "www.artelligence.shop"
@@ -236,6 +247,18 @@ resource "azurerm_static_web_app_custom_domain" "frontend" {
   }
 }
 
+resource "azurerm_static_web_app_custom_domain" "frontend_store" {
+  static_web_app_id = azurerm_static_web_app.frontend.id
+  domain_name       = "www.artelligence.store"
+  validation_type   = "cname-delegation"
+
+  lifecycle {
+    ignore_changes = [validation_type]
+  }
+}
+
 output "container_app_domain_verification_id" {
-  value = module.container_apps.container_app_id != null ? azurerm_container_app_custom_domain.backend.name : null
+  description = "api 도메인의 asuid.api TXT 검증 값"
+  value       = module.container_apps.custom_domain_verification_id
+  sensitive   = true
 }

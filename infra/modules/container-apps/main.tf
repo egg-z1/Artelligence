@@ -4,6 +4,11 @@ resource "azurerm_container_app_environment" "main" {
   location                   = var.location
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
+
   tags = var.tags
 }
 
@@ -11,6 +16,7 @@ resource "azurerm_container_app" "backend" {
   name                         = "${var.project_name}-${var.environment}-backend"
   resource_group_name          = var.resource_group_name
   container_app_environment_id = azurerm_container_app_environment.main.id
+  workload_profile_name        = "Consumption"
   revision_mode                = "Single"
 
   identity {
@@ -56,7 +62,7 @@ resource "azurerm_container_app" "backend" {
         name  = "LOG_LEVEL"
         value = var.environment == "prod" ? "INFO" : "DEBUG"
       }
-      
+
       env {
         name  = "ALLOWED_ORIGINS"
         value = join(",", var.allowed_cors_origins)
