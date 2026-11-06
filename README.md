@@ -26,7 +26,7 @@
 ------
 
 # 서비스 흐름
-> https://www.artelligence.shop 에서 직접 시연하실 수 있습니다.
+> https://www.artelligence.store 에서 직접 시연하실 수 있습니다.
 1. 프롬프트 입력 및 옵션(크기/품질/스타일) 선택
 2. Azure OpenAI(DALL·E 3)를 통한 이미지 생성
 3. Azure Blob Storage에 이미지 저장
