@@ -18,10 +18,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.postgresql.util.PSQLException;
+import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class DatabaseSchemaIntegrationTest {
     static final PostgreSQLContainer postgres = new PostgreSQLContainer(DockerImageName.parse("postgres:17.11"));
 
