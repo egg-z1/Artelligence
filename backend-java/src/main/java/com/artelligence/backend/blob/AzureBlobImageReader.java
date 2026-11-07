@@ -15,6 +15,7 @@ import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
@@ -26,6 +27,7 @@ public class AzureBlobImageReader implements BlobImageReader {
     private final ObjectMapper mapper;
     private final Clock clock;
 
+    @Autowired
     public AzureBlobImageReader(@Value("${azure.storage.connection-string:}") String connectionString,
             @Value("${azure.storage.container:generated-images}") String containerName, ObjectMapper mapper) {
         if (connectionString.isBlank()) throw new IllegalStateException("azure.storage.connection-string must be configured");
