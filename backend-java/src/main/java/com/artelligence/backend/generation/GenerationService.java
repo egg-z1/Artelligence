@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -30,6 +31,11 @@ public class GenerationService {
     }
 
     public byte[] generate(GenerateImageRequest request) {
+        return generate(request, ignored -> { });
+    }
+
+    /** Runs the same generation and storage pipeline as REST, publishing stage events when requested. */
+    public byte[] generate(GenerateImageRequest request, Consumer<GenerationStage> progress) {
         String id = UUID.randomUUID().toString();
         String blob = DAY.format(clock.instant()) + "/" + id + ".png";
         GeneratedImage image;
@@ -41,6 +47,12 @@ public class GenerationService {
         } catch (RuntimeException e) {
             log.error("generation_request_failed request_id={} blob_name={} stage=generation outcome=failure", id, blob);
             throw new GenerationException("이미지 생성에 실패했습니다", false, e);
+        }
+        try {
+            progress.accept(GenerationStage.SAVING);
+        } catch (RuntimeException e) {
+            // A progress transport failure must not turn into a storage failure or skip persistence.
+            log.warn("generation_progress_notification_failed request_id={} stage=saving", id);
         }
         StoredImage stored;
         try {
