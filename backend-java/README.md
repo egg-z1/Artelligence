@@ -12,12 +12,61 @@ set -a && . ./.env && set +a
 ./gradlew bootRun
 ```
 
-The app listens on `http://localhost:8081`. Flyway applies migrations on startup. Hibernate uses `ddl-auto=validate` and does not create the schema.
+The app listens on `http://localhost:8080`. Flyway applies migrations on startup. Hibernate uses `ddl-auto=validate` and does not create the schema. The `.env.example` PostgreSQL credentials are local defaults only.
 
 - `/health` is a lightweight application liveness response and does not report database connectivity.
 - `/actuator/health` is the Spring Actuator health endpoint and includes the configured database health indicator.
 
 Stop the local database with `docker compose down`. Remove its persisted local data with `docker compose down -v`.
+
+## Containerized local QA
+
+The `local-qa` Compose profile builds and starts a Spring image and an isolated PostgreSQL 17.11 service. Inside the Spring container, `DB_URL` uses the Compose service DNS name `postgres`; the host `localhost` URL in `.env.example` is for `bootRun` only. The app listens on port 8080 in both the JVM and container.
+
+Only explicitly enabling the Compose profile activates deterministic sample responses. In `local-qa`, the Azure Blob reader is replaced with three static sample images (two scenes in `QA 서재`, one uncategorized), and Azure image generation, writes, and deletes fail closed. The sample assets are served by a profile-only local endpoint. Normal execution does not activate these substitutes; the production Azure adapters remain selected and require their normal settings.
+
+```sh
+docker compose --env-file .env.example --profile local-qa -p artelligence-spring-qa up --build -d
+until curl -fsS http://localhost:8080/health >/dev/null; do sleep 2; done
+curl -i http://localhost:8080/health
+curl -i http://localhost:8080/actuator/health
+curl -i 'http://localhost:8080/api/v1/images?limit=10&offset=0'
+curl -i http://localhost:8080/api/v1/works
+curl -i -X OPTIONS http://localhost:8080/api/v1/works \
+  -H 'Origin: http://localhost:5000' \
+  -H 'Access-Control-Request-Method: GET' \
+  -H 'Access-Control-Request-Headers: content-type'
+docker compose --env-file .env.example --profile local-qa -p artelligence-spring-qa logs app
+docker compose --env-file .env.example --profile local-qa -p artelligence-spring-qa down
+```
+
+The default REST CORS allowlist and WebSocket Origin allowlist contain `http://localhost:5000`. Set `REST_CORS_ALLOWED_ORIGINS` and `WEBSOCKET_ALLOWED_ORIGINS` independently to comma-separated exact origins when using another local Flutter web origin. REST CORS does not configure WebSocket handshakes. Port mappings can be changed with `APP_PORT`; `SERVER_PORT` stays 8080 inside the container and QA sample image URLs follow the host mapping.
+
+Build the Flutter QA artifact with the local backend addresses, then serve `build/web` from an origin present in both allowlists:
+
+```sh
+cd ../client/artelligence
+flutter build web --release \
+  --dart-define=API_BASE_URL=http://localhost:8080 \
+  --dart-define=WS_BASE_URL=ws://localhost:8080
+python3 -m http.server 5000 --directory build/web
+```
+
+The current Flutter library loads health and works over REST. The generator screen still submits generation via REST; the WebSocket contract is not used by that screen. Local QA substitutes sample listing data only and deliberately disables generation and deletion. Container Apps ingress WebSocket upgrade and ingress handling of encoded delete paths remain for the later test deployment checklist.
+
+To stop only this named QA Compose project, use its `down` command above. This removes its app/PostgreSQL containers and network while leaving the named PostgreSQL data volume. It does not stop other Compose projects or remove their containers.
+
+### Container QA verification record
+
+Local verification completed on 2026-11-08 with Docker Desktop and the `local-qa` profile:
+
+- The Java 21 multi-stage image built successfully; PostgreSQL 17.11 became healthy, the app connected through Compose DNS `postgres`, and Flyway recorded migration `1:initial schema:success`.
+- `/health` returned 200 with the Flutter-required `status`, `timestamp` (UTC `Z`), and `service` fields; `/actuator/health` returned `UP`. `/api/v1/images` returned three sample records, and `/api/v1/works` returned two works with three scenes total. Chrome showed both work cards and scene counts of one and two. Thumbnail areas appeared black in this browser session; direct GET returned a valid 48×64 PNG (166 bytes), and a Java `ImageIO` test decoded it successfully.
+- REST CORS preflight returned 200 with the exact allowed origin and 403 for a disallowed origin. A real WebSocket handshake returned 101 for the allowed origin and 403 for the disallowed origin.
+- `flutter build web --release` completed with `API_BASE_URL=http://localhost:8080` and `WS_BASE_URL=ws://localhost:8080`. The Flutter `ApiService` decoded two works and three images. Chrome showed the work counts, and its WebSocket connected successfully once the container was ready. A WebSocket reconnect error was also observed during container restart; this was transient and not treated as an ingress test. The REST CORS preflight and WebSocket Origin allow/deny handshakes were verified separately.
+- `local-qa` generation returned 502 from its explicit fail-closed substitute and deletion returned 503; neither uses Azure. The complete `./gradlew test` suite passed, including PostgreSQL Testcontainers integration tests and PNG fixture decoding.
+
+The machine's port 5000 was already occupied, so this run used `http://localhost:5101` as the Flutter Origin and overrode both origin variables independently. No Azure credentials or Azure calls were used. This local check does not verify Azure Container Apps ingress, WebSocket forwarding through ingress, or encoded delete path normalization there.
 
 ## Tests
 

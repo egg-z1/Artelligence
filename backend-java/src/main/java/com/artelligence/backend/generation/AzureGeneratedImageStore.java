@@ -17,9 +17,11 @@ import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("!local-qa")
 public class AzureGeneratedImageStore implements GeneratedImageStore {
     private final String connectionString;
     private final String containerName;
