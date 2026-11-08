@@ -2,6 +2,7 @@ package com.artelligence.backend.blob;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.OffsetDateTime;
@@ -14,7 +15,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class BlobImageControllerTest {
     BlobImageReader reader = mock(BlobImageReader.class);
-    BlobImageController controller = new BlobImageController(new BlobImageService(reader), reader);
+    BlobImageDeleter deleter = mock(BlobImageDeleter.class);
+    BlobImageController controller = new BlobImageController(new BlobImageService(reader), reader,
+            new BlobImageDeletionService(new ImagePathValidator(), deleter));
     MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new BlobApiExceptionHandler()).build();
 
     @Test void emptyCollectionAndSnakeCaseContract() throws Exception {
@@ -41,5 +44,34 @@ class BlobImageControllerTest {
         mvc.perform(get("/api/v1/images?limit=101")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/images?offset=-1")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/images?offset=x")).andExpect(status().isBadRequest());
+    }
+
+    @Test void deleteKeepsFlutterResponseForSlashPath() throws Exception {
+        String path = "20260102/550e8400-e29b-41d4-a716-446655440000.png";
+        mvc.perform(delete("/api/v1/images/" + path))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("이미지가 성공적으로 삭제되었습니다"))
+                .andExpect(jsonPath("$.image_id").value(path));
+        verify(deleter).deleteImage(path);
+    }
+
+    @Test void deleteReturns404409503AndRejectsNonImagePaths() throws Exception {
+        String path = "20260102/550e8400-e29b-41d4-a716-446655440000.png";
+        doThrow(new ImageNotFoundException(path)).when(deleter).deleteImage(path);
+        mvc.perform(delete("/api/v1/images/" + path)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").exists());
+        doThrow(new BlobDeletionConflictException("etag conflict", null)).when(deleter).deleteImage(path);
+        mvc.perform(delete("/api/v1/images/" + path)).andExpect(status().isConflict());
+        doThrow(new BlobStorageException("unavailable")).when(deleter).deleteImage(path);
+        mvc.perform(delete("/api/v1/images/" + path)).andExpect(status().isServiceUnavailable());
+
+        mvc.perform(delete("/api/v1/images/" + path + ".json")).andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/v1/images/20260102/550e8400-e29b-41d4-a716-446655440000.jpg"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/v1/images/20260102%2F..%2F550e8400-e29b-41d4-a716-446655440000.png"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/v1/images/20260102%252F550e8400-e29b-41d4-a716-446655440000.png"))
+                .andExpect(status().isBadRequest());
+        verify(deleter, never()).deleteImage("20260102/550e8400-e29b-41d4-a716-446655440000.jpg");
     }
 }
