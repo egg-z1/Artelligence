@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -342,7 +343,14 @@ class GenerationWebSocketIntegrationTest {
             return mapper.readTree(message);
         }
         void send(String message) { webSocket.sendText(message, true).join(); }
-        @Override public void close() { if (webSocket != null && !webSocket.isOutputClosed()) webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "test").join(); }
+        @Override public void close() {
+            if (webSocket == null || webSocket.isOutputClosed()) return;
+            try {
+                webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "test").join();
+            } catch (CompletionException ignored) {
+                // The server may have closed the connection between isOutputClosed() and sendClose().
+            }
+        }
     }
 
     @TestConfiguration(proxyBeanMethods = false)
