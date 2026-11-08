@@ -23,6 +23,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("com.azure:azure-storage-blob:12.30.0")
 	implementation("com.fasterxml.jackson.core:jackson-databind")
