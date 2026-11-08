@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class BlobImageController {
     private final BlobImageService service;
     private final BlobImageReader reader;
-    public BlobImageController(BlobImageService service, BlobImageReader reader) { this.service = service; this.reader = reader; }
+    private final BlobImageDeletionService deletionService;
+    public BlobImageController(BlobImageService service, BlobImageReader reader, BlobImageDeletionService deletionService) {
+        this.service = service; this.reader = reader; this.deletionService = deletionService;
+    }
 
     @GetMapping("/api/v1/images")
     public ImageListResponse images(@RequestParam(defaultValue="20") int limit,
@@ -33,10 +37,18 @@ public class BlobImageController {
         return ImageDto.from(image);
     }
 
+    @DeleteMapping("/api/v1/images/{*imagePath}")
+    public DeleteImageResponse deleteImage(@PathVariable String imagePath) {
+        String path = imagePath.startsWith("/") ? imagePath.substring(1) : imagePath;
+        String validatedPath = deletionService.delete(path);
+        return new DeleteImageResponse("이미지가 성공적으로 삭제되었습니다", validatedPath);
+    }
+
     public record ImageDto(String image_id, String blob_name, String url, long size, java.time.OffsetDateTime created_at, String content_type, String prompt, String work_title, String excerpt) {
         static ImageDto from(BlobImageReader.BlobImage image) { return new ImageDto(image.blobName(), image.blobName(), image.url(), image.size(), image.createdAt(), image.contentType(), image.prompt(), image.workTitle(), image.excerpt()); }
     }
     public record ImageListResponse(List<ImageDto> images, int total) {}
     public record WorkDto(String work_title, int scene_count, String thumbnail_url, java.time.OffsetDateTime latest_created_at) {}
     public record WorksResponse(List<WorkDto> works) {}
+    public record DeleteImageResponse(String message, String image_id) {}
 }
