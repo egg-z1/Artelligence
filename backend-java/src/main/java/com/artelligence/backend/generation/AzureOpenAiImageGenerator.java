@@ -9,9 +9,11 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.azure.credential.AzureApiKeyCredential;
 import com.openai.models.images.ImageGenerateParams;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("!local-qa")
 public class AzureOpenAiImageGenerator implements ImageGenerator {
     private final String endpoint, apiKey, deployment;
 

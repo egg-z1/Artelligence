@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
 
 @Component
-@Profile("!test")
+@Profile("!test & !local-qa")
 public class AzureBlobImageReader implements BlobImageReader {
     private final BlobContainerClient container;
     private final ObjectMapper mapper;

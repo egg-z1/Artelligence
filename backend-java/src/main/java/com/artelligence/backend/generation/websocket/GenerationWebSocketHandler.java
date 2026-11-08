@@ -142,17 +142,24 @@ public class GenerationWebSocketHandler extends TextWebSocketHandler {
             completed.put("work_title", response.workTitle());
             completed.put("excerpt", response.excerpt());
             completed.put("message", "이미지 생성 완료!");
+            // Make the completed request reusable as soon as its work is done, before
+            // the client can receive the terminal frame and submit the next request.
+            release(connection);
             send(connection, completed);
         } catch (GenerationStorageException e) {
+            release(connection);
             sendError(connection, e.isTimeout() ? "STORAGE_TIMEOUT" : "STORAGE_FAILED",
                     e.isTimeout() ? "이미지 저장 시간이 초과되었습니다" : "이미지 저장소에 연결할 수 없습니다");
         } catch (GenerationException e) {
+            release(connection);
             sendError(connection, e.isTimeout() ? "GENERATION_TIMEOUT" : "GENERATION_FAILED",
                     e.isTimeout() ? "이미지 생성 시간이 초과되었습니다" : "이미지 생성에 실패했습니다");
         } catch (GenerationResponseException e) {
+            release(connection);
             sendError(connection, "RESPONSE_FAILED", "이미지는 저장됐지만 응답을 만들지 못했습니다");
         } catch (Exception e) {
             log.error("websocket_generation_failed stage=response_or_transport");
+            release(connection);
             sendError(connection, "INTERNAL_ERROR", "요청을 처리하지 못했습니다");
         } finally {
             release(connection);

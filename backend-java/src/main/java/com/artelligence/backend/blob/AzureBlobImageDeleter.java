@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("!test")
+@Profile("!test & !local-qa")
 public class AzureBlobImageDeleter implements BlobImageDeleter {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
     private final String connectionString;
